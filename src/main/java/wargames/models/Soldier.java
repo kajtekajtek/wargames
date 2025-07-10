@@ -8,15 +8,17 @@ public class Soldier
     private int     exp;
     private boolean alive;
 
+    public static final int PROMOTION_RANK_MULTIPLIER = 5;
+
     // constructors
+    public static Soldier withRank(Rank rank) {
+        return new Soldier(rank, 1, true);
+    }
+
     private Soldier(Rank rank, int exp, boolean alive) {
         this.rank  = rank;
         this.exp   = exp;
         this.alive = alive;
-    }
-
-    public static Soldier withRank(Rank rank) {
-        return new Soldier(rank, 1, true);
     }
 
     // accessors
@@ -38,30 +40,49 @@ public class Soldier
     }
 
     // mutators
-    public void incrementExp() {
+    public void increaseExpByN(int n) {
+        for (int i = 0; i < n; i++) {
+            incrementExp();
+        }
+    }
+
+    public void decreaseExpByN(int n) {
+        for (int i = 0; i < n; i++) {
+            decrementExp();
+        }
+    }
+
+    private void incrementExp() {
         if (!this.alive) {
             return;
         }
-
-        int rankValue = this.rank.getValue();
 
         this.exp += 1;
 
-        if (this.exp >= 5 * rankValue && rankValue < Rank.MAJOR.getValue()) {
-            this.rank = Rank.fromValue(rankValue + 1);
-            this.exp = 1;
-        }
+        promoteIfNeeded();
     } 
 
-    public void decrementExp() {
+    private void decrementExp() {
         if (!this.alive) {
             return;
         }
 
-        if (this.exp <= 1) {
+        this.exp -= 1;
+
+        killIfNeeded();
+    }
+
+    private void promoteIfNeeded() {
+        int rankValue = this.rank.getValue();
+        if (this.exp >= PROMOTION_RANK_MULTIPLIER * rankValue && rankValue < Rank.MAJOR.getValue()) {
+            this.rank = Rank.fromValue(rankValue + 1);
+            this.exp = 1;
+        }
+    }
+
+    private void killIfNeeded() {
+        if (this.exp < 1) {
             this.alive = false;
         }
-
-        this.exp -= 1;
     }
 }

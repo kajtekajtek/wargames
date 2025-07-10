@@ -29,35 +29,35 @@ class SoldierTest {
     void testGetStrength() {
         assertEquals(Rank.PRIVATE.getValue() * 1, soldier.getStrength());
 
-        soldier.incrementExp();
+        soldier.increaseExpByN(1);
 
         assertEquals(Rank.PRIVATE.getValue() * 2, soldier.getStrength());
     }
 
     @Nested
-    @DisplayName("incrementExp() tests")
-    class IncrementExpTests {
+    @DisplayName("increaseExpByN() tests")
+    class IncreaseExpByNTests {
         @Test
         @DisplayName("Increases exp by 1")
-        void testIncrementExp() {
-            soldier.incrementExp();
+        void testIncreaseExpByN() {
+            soldier.increaseExpByN(1);
             assertEquals(2, soldier.getExp());
             assertEquals(Rank.PRIVATE, soldier.getRank());
         }
 
-        @ParameterizedTest(name = "Promotion when exp >= 5 * rank value ")
+        @ParameterizedTest(name = "Promotion when exp >= PROMOTION_RANK_MULTIPLIER * rank value ")
         @EnumSource(value = Rank.class,
-                    names = {"PRIVATE","CORPORAL","CAPTAIN","MAJOR"},
-                    mode = EnumSource.Mode.INCLUDE)
+                    names = {"PRIVATE","CORPORAL","CAPTAIN"},
+                    mode  = EnumSource.Mode.INCLUDE)
         void testPromotionAtThreshold(Rank baseRank) {
+            int threshold = Soldier.PROMOTION_RANK_MULTIPLIER * baseRank.getValue();
+            int exp       = soldier.getExp();
+
             // arrange soldier with given rank
             soldier = Soldier.withRank(baseRank);
-            int threshold = 5 * baseRank.getValue();
 
-            // increment exp threshold times
-            for (int i = 0; i < threshold; i++) {
-                soldier.incrementExp();
-            }
+            // increase exp to threshold
+            soldier.increaseExpByN(threshold - exp);
 
             // assert promotion and exp equal to 1
             Rank expected = Rank.fromValue(baseRank.getValue() + 1);
@@ -69,12 +69,153 @@ class SoldierTest {
         @DisplayName("No promotion at max rank MAJOR")
         void testNoPromotionAtMaxRank() {
             soldier = Soldier.withRank(Rank.MAJOR);
+            int exp = soldier.getExp();
 
-            for (int i = 0; i < 5 * Rank.MAJOR.getValue(); i++) {
-                soldier.incrementExp();
-            }
+            soldier.increaseExpByN(Soldier.PROMOTION_RANK_MULTIPLIER * Rank.MAJOR.getValue() - exp);
+
             assertEquals(Rank.MAJOR, soldier.getRank());
-            assertEquals(Rank.MAJOR.getValue() * 5, soldier.getExp());
+            assertEquals(Rank.MAJOR.getValue() * Soldier.PROMOTION_RANK_MULTIPLIER, soldier.getExp());
+        }
+
+        @Test
+        @DisplayName("No state change when soldier is dead")
+        void testIncreaseExpOnDeadSoldier() {
+            soldier.decreaseExpByN(1);
+            assertFalse(soldier.isAlive());
+
+            int beforeExp = soldier.getExp();
+            soldier.increaseExpByN(1);
+
+            assertEquals(beforeExp, soldier.getExp());
+            assertFalse(soldier.isAlive());
+        }
+
+        @Test
+        @DisplayName("Over threshold promotion")
+        void testOverThresholdSinglePromotion() {
+            int n = 7;
+            int threshold = Soldier.PROMOTION_RANK_MULTIPLIER * Rank.PRIVATE.getValue();
+            int expectedExpAfterPromotion = n - threshold + 2;
+
+            soldier.increaseExpByN(n);
+
+            assertEquals(Rank.CORPORAL, soldier.getRank());
+            assertEquals(expectedExpAfterPromotion, soldier.getExp());
+        }
+
+        @Test
+        @DisplayName("Cascade promotions after big exp increase")
+        void testCascadePromotions() {
+            int n          = 100;
+            int expBefore  = soldier.getExp();
+            int promotions = 3;
+
+            int privateThreshold  = Soldier.PROMOTION_RANK_MULTIPLIER * Rank.PRIVATE.getValue();
+            int corporalThreshold = Soldier.PROMOTION_RANK_MULTIPLIER * Rank.CORPORAL.getValue();
+            int captainThreshold  = Soldier.PROMOTION_RANK_MULTIPLIER * Rank.CAPTAIN.getValue();
+
+            int expectedExp = n - privateThreshold - corporalThreshold 
+                - captainThreshold + expBefore + promotions;
+
+            soldier.increaseExpByN(n);
+
+            assertEquals(Rank.MAJOR, soldier.getRank());
+            assertEquals(expectedExp, soldier.getExp());
+        }
+
+        @Test
+        @DisplayName("increaseExpByN(0) – no state change")
+        void testZeroIncreaseExpByN() {
+            Rank    rankBefore  = soldier.getRank();
+            int     expBefore   = soldier.getExp();
+            boolean aliveBefore = soldier.isAlive();
+
+            soldier.increaseExpByN(0);
+
+            assertEquals(rankBefore, soldier.getRank(), "Ranga nie powinna się zmienić");
+            assertEquals(expBefore, soldier.getExp(), "Exp nie powinno się zmienić");
+            assertEquals(aliveBefore, soldier.isAlive(), "Stan alive nie powinien się zmienić");
+        }
+
+        @Test
+        @DisplayName("increaseExpByN(-5) – no state change")
+        void testNegativeIncreaseExpByN() {
+            Rank    rankBefore  = soldier.getRank();
+            int     expBefore   = soldier.getExp();
+            boolean aliveBefore = soldier.isAlive();
+
+            soldier.increaseExpByN(-5);
+
+            assertEquals(rankBefore, soldier.getRank());
+            assertEquals(expBefore, soldier.getExp());
+            assertEquals(aliveBefore, soldier.isAlive());
+        }
+    }
+
+    @Nested
+    @DisplayName("decreaseExpByN() tests")
+    class DecreaseExpByNTests {
+        @Test
+        @DisplayName("Exp should be decreased if it's above one")
+        void testDecreaseExpAboveOne() {
+            soldier.increaseExpByN(1); // exp=2
+
+            soldier.decreaseExpByN(1);
+
+            assertEquals(1, soldier.getExp());
+            assertTrue(soldier.isAlive());
+        }
+
+        @Test
+        @DisplayName("If exp < 1 -> soldier is dead")
+        void testDecreaseExpAtOrBelowOneKills() {
+            // exp == 0 -> death
+            soldier.decreaseExpByN(1);
+
+            assertFalse(soldier.isAlive());
+
+            assertTrue(soldier.getExp() < 1);
+        }
+
+        @Test
+        @DisplayName("Exp shouldn't get decreased further when it's already below 1")
+        void testDecreaseExpOnDeadSoldier() {
+            soldier.decreaseExpByN(1);
+            assertFalse(soldier.isAlive());
+
+            int beforeExp = soldier.getExp();
+            soldier.decreaseExpByN(1);
+
+            assertEquals(beforeExp, soldier.getExp());
+            assertFalse(soldier.isAlive());
+        }
+
+        @Test
+        @DisplayName("decreaseExpByN(0) – no state change")
+        void testZeroDecreaseExpByN() {
+            Rank    rankBefore  = soldier.getRank();
+            int     expBefore   = soldier.getExp();
+            boolean aliveBefore = soldier.isAlive();
+
+            soldier.decreaseExpByN(0);
+
+            assertEquals(rankBefore, soldier.getRank());
+            assertEquals(expBefore, soldier.getExp());
+            assertEquals(aliveBefore, soldier.isAlive());
+        }
+
+        @Test
+        @DisplayName("decreaseExpByN(-3) – no state change")
+        void testNegativeDecreaseExpByN() {
+            Rank    rankBefore  = soldier.getRank();
+            int     expBefore   = soldier.getExp();
+            boolean aliveBefore = soldier.isAlive();
+
+            soldier.decreaseExpByN(-3);
+
+            assertEquals(rankBefore, soldier.getRank());
+            assertEquals(expBefore, soldier.getExp());
+            assertEquals(aliveBefore, soldier.isAlive());
         }
     }
 }
