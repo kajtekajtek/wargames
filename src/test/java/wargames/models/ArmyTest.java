@@ -115,7 +115,7 @@ class ArmyTest {
 
     @Test
     @DisplayName("Multiple killAndRemoveRandom() eventually empty the army")
-    void testMultipleRandomShootUntilEmpty() {
+    void testMultipleKillAndRemoveRandomUntilEmpty() {
         army.add(s1);
         army.add(s2);
         army.add(s3);
