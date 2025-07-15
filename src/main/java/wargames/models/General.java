@@ -44,7 +44,7 @@ public class General {
         this.gold -= totalCost;
 
         for (int i = 0; i < quantity; i++) {
-            this.army.add(Soldier.withRank(rank));
+            this.army.addNewSoldierWithRank(rank);
         }
     } 
 }
