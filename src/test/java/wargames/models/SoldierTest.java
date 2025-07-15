@@ -7,18 +7,23 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import wargames.factories.SoldierFactory;
+
 class SoldierTest {
-    private Soldier soldier;
+
+    private SoldierFactory  factory;
+    private Soldier         soldier;
 
     @BeforeEach
     void setUp() {
+        this.factory = new SoldierFactory();
         // rank = PRIVATE, exp = 1, alive = true
-        soldier = Soldier.withRank(Rank.PRIVATE);
+        this.soldier = factory.createPrivate(); 
     }
 
     @Test
-    @DisplayName("Soldier.withRank() initializes soldier's rank, exp = 1 & alive = true")
-    void testWithRankInitializesFields() {
+    @DisplayName("Soldier creation from rank initializes soldier's rank to given, exp to 1 & alive to true")
+    void testCreatePrivateInitializesFields() {
         assertEquals(Rank.PRIVATE, soldier.getRank(), "Incorrect rank");
         assertEquals(1, soldier.getExp(), "exp != 1");
         assertTrue(soldier.isAlive(), "Soldier should not be dead");
@@ -54,7 +59,19 @@ class SoldierTest {
             int exp       = soldier.getExp();
 
             // arrange soldier with given rank
-            soldier = Soldier.withRank(baseRank);
+            switch(baseRank) {
+                case PRIVATE:
+                    break;
+                case CORPORAL:
+                    soldier = factory.createCorporal();
+                    break;
+                case CAPTAIN:
+                    soldier = factory.createCaptain();
+                    break;
+                case MAJOR:
+                    soldier = factory.createMajor();
+                    break;
+            }
 
             // increase exp to threshold
             soldier.increaseExpByN(threshold - exp);
@@ -68,7 +85,7 @@ class SoldierTest {
         @Test
         @DisplayName("No promotion at max rank MAJOR")
         void testNoPromotionAtMaxRank() {
-            soldier = Soldier.withRank(Rank.MAJOR);
+            soldier = factory.createMajor();
             int exp = soldier.getExp();
 
             soldier.increaseExpByN(Soldier.PROMOTION_RANK_MULTIPLIER * Rank.MAJOR.getValue() - exp);
