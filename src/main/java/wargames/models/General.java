@@ -1,0 +1,50 @@
+package wargames.models;
+
+import wargames.exceptions.InsufficientGoldException;
+
+public class General {
+
+    private final Army   army;    
+    private final String name;
+    private int gold;
+
+    public static final int RECRUITMENT_COST_PER_RANK = 10;
+
+    // constructors
+    public General(int gold, String name) {
+        this.army = new Army();
+        this.name = name;
+        this.gold = gold;
+    }
+
+    // accessors
+    public Army getArmy() {
+        return this.army;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public int getGold() {
+        return this.gold;
+    }
+ 
+    // predicates
+
+    // mutators
+    public void recruitSoldiers(Rank rank, int quantity) throws Exception {
+        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
+        int totalCost = costPerSoldier * quantity;
+
+        if (totalCost > this.gold) {
+            throw new InsufficientGoldException(this.gold, totalCost);
+        }
+
+        this.gold -= totalCost;
+
+        for (int i = 0; i < quantity; i++) {
+            this.army.add(Soldier.withRank(rank));
+        }
+    } 
+}
