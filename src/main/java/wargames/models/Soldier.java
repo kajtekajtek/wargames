@@ -1,7 +1,5 @@
 package wargames.models;
 
-import wargames.models.Rank;
-
 public class Soldier
 {
     private Rank    rank;
