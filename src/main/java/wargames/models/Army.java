@@ -4,12 +4,16 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 
+import wargames.factories.SoldierFactory;
+
 public class Army {
 
-    private List<Soldier> soldiers;    
+    private SoldierFactory soldierFactory;
+    private List<Soldier>  soldiers;    
 
     // constructors
     public Army() {
+        this.soldierFactory = new SoldierFactory();
         this.soldiers = new ArrayList<Soldier>();
     }
 
@@ -26,9 +30,30 @@ public class Army {
         return totalStrength;
     }
 
-    // predicates
-
     // mutators
+    public void addNewSoldierWithRank(Rank rank) {
+        Soldier newSoldier;
+        switch(rank) {
+            case PRIVATE:
+                newSoldier = soldierFactory.createPrivate();
+                break;
+            case CORPORAL:
+                newSoldier = soldierFactory.createCorporal();
+                break;
+            case CAPTAIN:
+                newSoldier = soldierFactory.createCaptain();
+                break;
+            case MAJOR:
+                newSoldier = soldierFactory.createMajor();
+                break;
+            default:
+                throw new IllegalArgumentException(String.format(
+                    "could not create new soldier with rank %s", rank.name()));
+        }
+        
+        add(newSoldier);
+    }
+
     public void add(Soldier s) {
         this.soldiers.add(s);
     }

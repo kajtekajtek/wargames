@@ -1,36 +1,48 @@
 package wargames.models;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import wargames.factories.SoldierFactory;
 
 class ArmyTest {
-
-    private Army army;
-    private Soldier s1, s2, s3, s4;
 
     private static final int S1_STRENGTH = 2;
     private static final int S2_STRENGTH = 4;
     private static final int S3_STRENGTH = 6;
     private static final int S4_STRENGTH = 4;
 
+    private Army           army;
+    private SoldierFactory soldierFactory;
+    private Soldier        s1, s2, s3, s4;
+
     @BeforeEach
     void setUp() {
         army = new Army();
+        soldierFactory = new SoldierFactory();
 
-        s1 = Soldier.withRank(Rank.PRIVATE);
+        s1 = soldierFactory.createPrivate();
         s1.increaseExpByN(S1_STRENGTH / s1.getRank().getValue());
 
-        s2 = Soldier.withRank(Rank.CORPORAL);
+        s2 = soldierFactory.createCorporal();
         s2.increaseExpByN(S2_STRENGTH / s2.getRank().getValue());
 
-        s3 = Soldier.withRank(Rank.CAPTAIN);
+        s3 = soldierFactory.createCaptain();
         s3.increaseExpByN(S3_STRENGTH / s3.getRank().getValue());
 
-        s4 = Soldier.withRank(Rank.MAJOR);
+        s4 = soldierFactory.createMajor();
         s4.increaseExpByN(S4_STRENGTH / s4.getRank().getValue());
     }
 
@@ -131,4 +143,39 @@ class ArmyTest {
                 "Total army strength should equal to 0");
     }
 
+    @Test
+    @DisplayName("should add a PRIVATE soldier")
+    void testAddNewSoldierWithRankPrivate() {
+        army.addNewSoldierWithRank(Rank.PRIVATE);
+        assertEquals(1, army.getSoldiers().size());
+        Soldier added = army.getSoldiers().get(0);
+        assertEquals(Rank.PRIVATE, added.getRank());
+    }
+
+    @Test
+    @DisplayName("should add a CORPORAL soldier")
+    void testAddNewSoldierWithRankCorporal() {
+        army.addNewSoldierWithRank(Rank.CORPORAL);
+        assertEquals(1, army.getSoldiers().size());
+        Soldier added = army.getSoldiers().get(0);
+        assertEquals(Rank.CORPORAL, added.getRank());
+    }
+
+    @Test
+    @DisplayName("should add a CAPTAIN soldier")
+    void testAddNewSoldierWithRankCaptain() {
+        army.addNewSoldierWithRank(Rank.CAPTAIN);
+        assertEquals(1, army.getSoldiers().size());
+        Soldier added = army.getSoldiers().get(0);
+        assertEquals(Rank.CAPTAIN, added.getRank());
+    }
+
+    @Test
+    @DisplayName("should add a MAJOR soldier")
+    void testAddNewSoldierWithRankMajor() {
+        army.addNewSoldierWithRank(Rank.MAJOR);
+        assertEquals(1, army.getSoldiers().size());
+        Soldier added = army.getSoldiers().get(0);
+        assertEquals(Rank.MAJOR, added.getRank());
+    }
 }
