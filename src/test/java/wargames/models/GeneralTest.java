@@ -13,8 +13,9 @@ class GeneralTest {
     private static final int    TEST_STARTING_GOLD        = 100;
     private static final int    RECRUITMENT_COST_PER_RANK = General.RECRUITMENT_COST_PER_RANK;
 
-    private General        general;
     private SoldierFactory soldierFactory;
+
+    private General general;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +51,7 @@ class GeneralTest {
 
         Army generalArmy = general.getArmy();
 
-        general.recruitNSoldiersByRank(soldiersQuantity, soldiersRank);
+        general.recruitNSoldiersWithRank(soldiersQuantity, soldiersRank);
 
         assertEquals(soldiersQuantity, generalArmy.getSoldiers().size(),
                      String.format("%d soldiers should have been recruited", soldiersQuantity));
@@ -71,7 +72,7 @@ class GeneralTest {
 
         InsufficientGoldException ex = assertThrows(
             InsufficientGoldException.class,
-            () -> poor.recruitNSoldiersByRank(1, soldierRank),
+            () -> poor.recruitNSoldiersWithRank(1, soldierRank),
             "Should throw InsufficientGoldException"
         );
         assertTrue(ex.getMessage().contains(String.format("%d", lowGold)),
@@ -83,7 +84,7 @@ class GeneralTest {
     @Test
     @DisplayName("recruitNSoldiersByRank(... , 0) – does not recruit any soldiers")
     void testRecruitZeroQuantity() throws Exception {
-        general.recruitNSoldiersByRank(0, Rank.CAPTAIN);
+        general.recruitNSoldiersWithRank(0, Rank.CAPTAIN);
         assertTrue(general.getArmy().getSoldiers().isEmpty(),
                    "No soldiers should have been added to the army");
     }
@@ -91,7 +92,7 @@ class GeneralTest {
     @Test
     @DisplayName("recruitNSoldiersByRank(... , -n) – does not recruit any soldiers")
     void testRecruitNegativeQuantity() throws Exception {
-        general.recruitNSoldiersByRank(-3, Rank.MAJOR);
+        general.recruitNSoldiersWithRank(-3, Rank.MAJOR);
         assertTrue(general.getArmy().getSoldiers().isEmpty(),
                    "No soldiers should have been added to the army");
     }
