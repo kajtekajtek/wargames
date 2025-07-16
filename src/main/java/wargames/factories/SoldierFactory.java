@@ -4,7 +4,7 @@ import wargames.models.Soldier;
 import wargames.models.Rank;
 
 public class SoldierFactory {
-    public Soldier createSoldierWithRank(Rank rank) {
+    public Soldier createSoldier(Rank rank) {
         return Soldier.withRank(rank);
     }
 
