@@ -29,8 +29,8 @@ class ArmyTest {
 
     @BeforeEach
     void setUp() {
-        army = new Army();
         soldierFactory = new SoldierFactory();
+        army = new Army(soldierFactory);
 
         s1 = soldierFactory.createPrivate();
         s1.increaseExpByN(S1_STRENGTH / s1.getRank().getValue());

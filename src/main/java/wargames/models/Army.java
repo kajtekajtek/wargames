@@ -12,9 +12,9 @@ public class Army {
     private List<Soldier>  soldiers;    
 
     // constructors
-    public Army() {
-        this.soldierFactory = new SoldierFactory();
-        this.soldiers = new ArrayList<Soldier>();
+    public Army(SoldierFactory soldierFactory) {
+        this.soldierFactory = soldierFactory;
+        this.soldiers       = new ArrayList<Soldier>();
     }
 
     // accessors
@@ -32,26 +32,7 @@ public class Army {
 
     // mutators
     public void addNewSoldierWithRank(Rank rank) {
-        Soldier newSoldier;
-        switch(rank) {
-            case PRIVATE:
-                newSoldier = soldierFactory.createPrivate();
-                break;
-            case CORPORAL:
-                newSoldier = soldierFactory.createCorporal();
-                break;
-            case CAPTAIN:
-                newSoldier = soldierFactory.createCaptain();
-                break;
-            case MAJOR:
-                newSoldier = soldierFactory.createMajor();
-                break;
-            default:
-                throw new IllegalArgumentException(String.format(
-                    "could not create new soldier with rank %s", rank.name()));
-        }
-        
-        add(newSoldier);
+        add(this.soldierFactory.createSoldierWithRank(rank));
     }
 
     public void add(Soldier s) {

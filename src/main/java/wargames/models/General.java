@@ -2,6 +2,8 @@ package wargames.models;
 
 import wargames.exceptions.InsufficientGoldException;
 
+import wargames.factories.*;
+
 public class General {
 
     private final Army   army;    
@@ -11,8 +13,8 @@ public class General {
     public static final int RECRUITMENT_COST_PER_RANK = 10;
 
     // constructors
-    public General(int gold, String name) {
-        this.army = new Army();
+    public General(int gold, String name, SoldierFactory soldierFactory) {
+        this.army = new Army(soldierFactory);
         this.name = name;
         this.gold = gold;
     }
@@ -33,11 +35,9 @@ public class General {
     // predicates
 
     // mutators
-    public void recruitSoldiers(Rank rank, int quantity) throws Exception {
-        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
-        int totalCost = costPerSoldier * quantity;
-
-        if (totalCost > this.gold) {
+    public void recruitNSoldiersByRank(int quantity, Rank rank) throws InsufficientGoldException {
+        int totalCost = calculateRecruitmentCost(quantity, rank);
+        if (totalCost > this.gold) { 
             throw new InsufficientGoldException(this.gold, totalCost);
         }
 
@@ -47,4 +47,10 @@ public class General {
             this.army.addNewSoldierWithRank(rank);
         }
     } 
+    
+    private static int calculateRecruitmentCost(int quantity, Rank rank) {
+        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
+        int totalCost = costPerSoldier * quantity;
+        return totalCost;
+    }
 }
