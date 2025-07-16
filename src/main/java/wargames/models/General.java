@@ -1,28 +1,21 @@
 package wargames.models;
 
+import wargames.commands.Command;
 import wargames.exceptions.InsufficientGoldException;
-
-import wargames.factories.*;
 
 public class General {
 
-    public static final int RECRUITMENT_COST_PER_RANK = 10;
-
-    private final Army           army;    
-    private final String         name;
-    private final SoldierFactory soldierFactory;
+    private final Army   army;    
+    private final String name;
 
     private int gold;
 
-    // constructors
-    public General(int gold, String name, SoldierFactory soldierFactory) {
+    public General(String name, int gold) {
         this.army = new Army();
         this.name = name;
-        this.soldierFactory = soldierFactory;
         this.gold = gold;
     }
 
-    // accessors
     public Army getArmy() {
         return this.army;
     }
@@ -34,27 +27,20 @@ public class General {
     public int getGold() {
         return this.gold;
     }
- 
-    // predicates
-
-    // mutators
-    public void recruitNSoldiersWithRank(int quantity, Rank rank) throws InsufficientGoldException {
-        int totalCost = calculateRecruitmentCost(quantity, rank);
-        if (totalCost > this.gold) { 
-            throw new InsufficientGoldException(this.gold, totalCost);
-        }
-
-        this.gold -= totalCost;
-
-        for (int i = 0; i < quantity; i++) {
-            Soldier recruit = this.soldierFactory.createSoldierWithRank(rank);
-            this.army.add(recruit);
-        }
-    } 
     
-    private static int calculateRecruitmentCost(int quantity, Rank rank) {
-        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
-        int totalCost = costPerSoldier * quantity;
-        return totalCost;
+    public void subtractGold(int gold) throws InsufficientGoldException {
+        if (gold < 0) {
+            throw new IllegalArgumentException("subtrahend should be a positive value");
+        }
+
+        if (gold > this.gold) {
+            throw new InsufficientGoldException(this.gold, gold);
+        }
+        
+        this.gold -= gold;
+    }
+    
+    public void executeCommand(Command cmd) throws Exception {
+        cmd.execute();
     }
 }

@@ -4,23 +4,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
 
-import wargames.factories.*;
 import wargames.exceptions.InsufficientGoldException;
 
 class GeneralTest {
 
-    private static final String TEST_GENERAL_NAME         = "Ferdinand Foch";
-    private static final int    TEST_STARTING_GOLD        = 100;
-    private static final int    RECRUITMENT_COST_PER_RANK = General.RECRUITMENT_COST_PER_RANK;
-
-    private SoldierFactory soldierFactory;
+    private static final String TEST_GENERAL_NAME  = "Ferdinand Foch";
+    private static final int    TEST_STARTING_GOLD = 100;
 
     private General general;
 
     @BeforeEach
     void setUp() {
-        this.soldierFactory = new SoldierFactory();
-        general = new General(TEST_STARTING_GOLD, TEST_GENERAL_NAME, this.soldierFactory);
+        general = new General(TEST_GENERAL_NAME, TEST_STARTING_GOLD);
     }
 
     @Test
@@ -37,63 +32,56 @@ class GeneralTest {
         assertEquals(0, general.getArmy().getTotalStrength(), 
                 "Empty army's strength should equal to 0");
     }
-
+    
     @Test
-    @DisplayName("recruitNSoldiersByRank – sufficient gold recruits soldiers")
-    void testrecruitNSoldiersByRankWithSufficientGold() throws Exception {
-        Rank soldiersRank          = Rank.PRIVATE;
-        int  soldiersQuantity      = 3;
-        int  expectedTotalStrength = soldiersQuantity * soldiersRank.getValue();
-
-        int  costPerSoldier  = soldiersRank.getValue() * RECRUITMENT_COST_PER_RANK;
-        int  recruitmentCost = costPerSoldier * soldiersQuantity;
-
-
-        Army generalArmy = general.getArmy();
-
-        general.recruitNSoldiersWithRank(soldiersQuantity, soldiersRank);
-
-        assertEquals(soldiersQuantity, generalArmy.getSoldiers().size(),
-                     String.format("%d soldiers should have been recruited", soldiersQuantity));
-        assertEquals(soldiersQuantity, generalArmy.getTotalStrength(),
-                     "Total army strength should equal to " + expectedTotalStrength);
-        assertEquals(TEST_STARTING_GOLD - recruitmentCost, general.getGold(),
-                     "General's gold should be reduced by the cost of recruitment");
+    @DisplayName("subtractGold subtracts gold correctly")
+    void testSubtractGoldSubtractsGold() {
+        int subtrahend = 10;
+        int expected   = TEST_STARTING_GOLD - subtrahend;
+        
+        assertDoesNotThrow(() -> general.subtractGold(subtrahend));
+        
+        assertEquals(expected, general.getGold());
     }
-
+    
     @Test
-    @DisplayName("recruitNSoldiersByRank – insufficient gold throws InsufficientGoldException")
-    void testrecruitNSoldiersByRankWithInsufficientGold() {
-        int lowGold = 5;
-        Rank soldierRank = Rank.PRIVATE;
-        int recruitmentCost = soldierRank.getValue() * RECRUITMENT_COST_PER_RANK * 1;
-
-        General poor = new General(lowGold, "Poor", this.soldierFactory);
-
-        InsufficientGoldException ex = assertThrows(
-            InsufficientGoldException.class,
-            () -> poor.recruitNSoldiersWithRank(1, soldierRank),
-            "Should throw InsufficientGoldException"
+    @DisplayName("subtractGold throws an exception when subtraction results in negative value")
+    void testSubtractGoldInsufficientGold() {
+        int subtrahend = TEST_STARTING_GOLD + 10;
+        String expectedMessage = String.format(
+            "insufficient funds: you have %d, you need %d",
+            TEST_STARTING_GOLD, subtrahend
         );
-        assertTrue(ex.getMessage().contains(String.format("%d", lowGold)),
-                   "Exception message should contain the amount of gold held");
-        assertTrue(ex.getMessage().contains(String.format("%d", recruitmentCost)),
-                   "Exception message should contain the amount of gold needed");
+        
+        Exception exception = assertThrows(InsufficientGoldException.class, () -> {
+            general.subtractGold(subtrahend);
+        });
+        
+        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals(TEST_STARTING_GOLD, general.getGold());
     }
-
+    
     @Test
-    @DisplayName("recruitNSoldiersByRank(... , 0) – does not recruit any soldiers")
-    void testRecruitZeroQuantity() throws Exception {
-        general.recruitNSoldiersWithRank(0, Rank.CAPTAIN);
-        assertTrue(general.getArmy().getSoldiers().isEmpty(),
-                   "No soldiers should have been added to the army");
+    @DisplayName("subtractGold throws an exception when trying to subtract negative value")
+    void testSubtractNegativeAmountOfGold() {
+        int subtrahend = -10;
+        String expectedMessage = "subtrahend should be a positive value";
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            general.subtractGold(subtrahend);
+        });
+        
+        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals(TEST_STARTING_GOLD, general.getGold());
     }
-
+    
     @Test
-    @DisplayName("recruitNSoldiersByRank(... , -n) – does not recruit any soldiers")
-    void testRecruitNegativeQuantity() throws Exception {
-        general.recruitNSoldiersWithRank(-3, Rank.MAJOR);
-        assertTrue(general.getArmy().getSoldiers().isEmpty(),
-                   "No soldiers should have been added to the army");
+    @DisplayName("subtractGold does nothing when subtrahend equals to 0")
+    void testSubtractZeroGold() {
+        int subtrahend = 0;
+        
+        assertDoesNotThrow(() -> general.subtractGold(subtrahend));
+        
+        assertEquals(TEST_STARTING_GOLD, general.getGold());
     }
 }
