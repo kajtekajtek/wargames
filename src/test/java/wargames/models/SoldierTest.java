@@ -59,19 +59,7 @@ class SoldierTest {
             int exp       = soldier.getExp();
 
             // arrange soldier with given rank
-            switch(baseRank) {
-                case PRIVATE:
-                    break;
-                case CORPORAL:
-                    soldier = factory.createCorporal();
-                    break;
-                case CAPTAIN:
-                    soldier = factory.createCaptain();
-                    break;
-                case MAJOR:
-                    soldier = factory.createMajor();
-                    break;
-            }
+            soldier = factory.createSoldierWithRank(baseRank);
 
             // increase exp to threshold
             soldier.increaseExpByN(threshold - exp);

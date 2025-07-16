@@ -4,6 +4,10 @@ import wargames.models.Soldier;
 import wargames.models.Rank;
 
 public class SoldierFactory {
+    public Soldier createSoldierWithRank(Rank rank) {
+        return Soldier.withRank(rank);
+    }
+
     public Soldier createPrivate() {
         return Soldier.withRank(Rank.PRIVATE);
     }
