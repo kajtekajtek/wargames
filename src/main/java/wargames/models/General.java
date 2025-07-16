@@ -2,18 +2,23 @@ package wargames.models;
 
 import wargames.exceptions.InsufficientGoldException;
 
-public class General {
+import wargames.factories.*;
 
-    private final Army   army;    
-    private final String name;
-    private int gold;
+public class General {
 
     public static final int RECRUITMENT_COST_PER_RANK = 10;
 
+    private final Army           army;    
+    private final String         name;
+    private final SoldierFactory soldierFactory;
+
+    private int gold;
+
     // constructors
-    public General(int gold, String name) {
+    public General(int gold, String name, SoldierFactory soldierFactory) {
         this.army = new Army();
         this.name = name;
+        this.soldierFactory = soldierFactory;
         this.gold = gold;
     }
 
@@ -33,18 +38,23 @@ public class General {
     // predicates
 
     // mutators
-    public void recruitSoldiers(Rank rank, int quantity) throws Exception {
-        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
-        int totalCost = costPerSoldier * quantity;
-
-        if (totalCost > this.gold) {
+    public void recruitNSoldiersWithRank(int quantity, Rank rank) throws InsufficientGoldException {
+        int totalCost = calculateRecruitmentCost(quantity, rank);
+        if (totalCost > this.gold) { 
             throw new InsufficientGoldException(this.gold, totalCost);
         }
 
         this.gold -= totalCost;
 
         for (int i = 0; i < quantity; i++) {
-            this.army.add(Soldier.withRank(rank));
+            Soldier recruit = this.soldierFactory.createSoldierWithRank(rank);
+            this.army.add(recruit);
         }
     } 
+    
+    private static int calculateRecruitmentCost(int quantity, Rank rank) {
+        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
+        int totalCost = costPerSoldier * quantity;
+        return totalCost;
+    }
 }

@@ -1,36 +1,47 @@
 package wargames.models;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import wargames.factories.SoldierFactory;
 
 class ArmyTest {
-
-    private Army army;
-    private Soldier s1, s2, s3, s4;
 
     private static final int S1_STRENGTH = 2;
     private static final int S2_STRENGTH = 4;
     private static final int S3_STRENGTH = 6;
     private static final int S4_STRENGTH = 4;
 
+    private Army           army;
+    private SoldierFactory soldierFactory;
+    private Soldier        s1, s2, s3, s4;
+
     @BeforeEach
     void setUp() {
+        soldierFactory = new SoldierFactory();
         army = new Army();
 
-        s1 = Soldier.withRank(Rank.PRIVATE);
+        s1 = soldierFactory.createPrivate();
         s1.increaseExpByN(S1_STRENGTH / s1.getRank().getValue());
 
-        s2 = Soldier.withRank(Rank.CORPORAL);
+        s2 = soldierFactory.createCorporal();
         s2.increaseExpByN(S2_STRENGTH / s2.getRank().getValue());
 
-        s3 = Soldier.withRank(Rank.CAPTAIN);
+        s3 = soldierFactory.createCaptain();
         s3.increaseExpByN(S3_STRENGTH / s3.getRank().getValue());
 
-        s4 = Soldier.withRank(Rank.MAJOR);
+        s4 = soldierFactory.createMajor();
         s4.increaseExpByN(S4_STRENGTH / s4.getRank().getValue());
     }
 
@@ -74,7 +85,7 @@ class ArmyTest {
     @DisplayName("killAndRemoveRandom() on an empty army does nothing")
     void testKillAndRemoveRandomEmptyArmy() {
         assertDoesNotThrow(() -> army.killAndRemoveRandom(), 
-                "killAndRemoveRandom() should not throw an exception on the empty army");
+                "killAndRsoldierFactoryemoveRandom() should not throw an exception on the empty army");
         assertTrue(army.getSoldiers().isEmpty(), 
                 "Army should be empty");
         assertEquals(0, army.getTotalStrength(), 
@@ -130,5 +141,4 @@ class ArmyTest {
         assertEquals(0, army.getTotalStrength(), 
                 "Total army strength should equal to 0");
     }
-
 }
