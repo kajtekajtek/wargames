@@ -30,7 +30,7 @@ class ArmyTest {
     @BeforeEach
     void setUp() {
         soldierFactory = new SoldierFactory();
-        army = new Army(soldierFactory);
+        army = new Army();
 
         s1 = soldierFactory.createPrivate();
         s1.increaseExpByN(S1_STRENGTH / s1.getRank().getValue());
@@ -85,7 +85,7 @@ class ArmyTest {
     @DisplayName("killAndRemoveRandom() on an empty army does nothing")
     void testKillAndRemoveRandomEmptyArmy() {
         assertDoesNotThrow(() -> army.killAndRemoveRandom(), 
-                "killAndRemoveRandom() should not throw an exception on the empty army");
+                "killAndRsoldierFactoryemoveRandom() should not throw an exception on the empty army");
         assertTrue(army.getSoldiers().isEmpty(), 
                 "Army should be empty");
         assertEquals(0, army.getTotalStrength(), 
@@ -140,41 +140,5 @@ class ArmyTest {
         assertTrue(army.getSoldiers().isEmpty(), "Army should be empty");
         assertEquals(0, army.getTotalStrength(), 
                 "Total army strength should equal to 0");
-    }
-
-    @Test
-    @DisplayName("should add a PRIVATE soldier")
-    void testAddNewSoldierWithRankPrivate() {
-        army.addNewSoldierWithRank(Rank.PRIVATE);
-        assertEquals(1, army.getSoldiers().size());
-        Soldier added = army.getSoldiers().get(0);
-        assertEquals(Rank.PRIVATE, added.getRank());
-    }
-
-    @Test
-    @DisplayName("should add a CORPORAL soldier")
-    void testAddNewSoldierWithRankCorporal() {
-        army.addNewSoldierWithRank(Rank.CORPORAL);
-        assertEquals(1, army.getSoldiers().size());
-        Soldier added = army.getSoldiers().get(0);
-        assertEquals(Rank.CORPORAL, added.getRank());
-    }
-
-    @Test
-    @DisplayName("should add a CAPTAIN soldier")
-    void testAddNewSoldierWithRankCaptain() {
-        army.addNewSoldierWithRank(Rank.CAPTAIN);
-        assertEquals(1, army.getSoldiers().size());
-        Soldier added = army.getSoldiers().get(0);
-        assertEquals(Rank.CAPTAIN, added.getRank());
-    }
-
-    @Test
-    @DisplayName("should add a MAJOR soldier")
-    void testAddNewSoldierWithRankMajor() {
-        army.addNewSoldierWithRank(Rank.MAJOR);
-        assertEquals(1, army.getSoldiers().size());
-        Soldier added = army.getSoldiers().get(0);
-        assertEquals(Rank.MAJOR, added.getRank());
     }
 }

@@ -4,16 +4,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
 
-import wargames.factories.SoldierFactory;
-
 public class Army {
 
-    private SoldierFactory soldierFactory;
     private List<Soldier>  soldiers;    
 
     // constructors
-    public Army(SoldierFactory soldierFactory) {
-        this.soldierFactory = soldierFactory;
+    public Army() {
         this.soldiers       = new ArrayList<Soldier>();
     }
 
@@ -31,10 +27,6 @@ public class Army {
     }
 
     // mutators
-    public void addNewSoldierWithRank(Rank rank) {
-        add(this.soldierFactory.createSoldierWithRank(rank));
-    }
-
     public void add(Soldier s) {
         this.soldiers.add(s);
     }
