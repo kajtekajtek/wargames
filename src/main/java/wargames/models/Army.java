@@ -6,11 +6,11 @@ import java.util.Random;
 
 public class Army {
 
-    private List<Soldier>  soldiers;    
+    private List<Soldier> soldiers;    
 
     // constructors
     public Army() {
-        this.soldiers       = new ArrayList<Soldier>();
+        this.soldiers = new ArrayList<Soldier>();
     }
 
     // accessors
