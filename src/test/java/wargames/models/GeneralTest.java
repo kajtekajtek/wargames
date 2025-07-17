@@ -34,6 +34,58 @@ class GeneralTest {
     }
     
     @Test
+    @DisplayName("addGold adds gold correctly")
+    void testAddGoldAddsGold() {
+        int summand  = 10;
+        int expected = TEST_STARTING_GOLD + summand;
+        
+        assertDoesNotThrow(() -> general.addGold(summand));
+        
+        assertEquals(expected, general.getGold());
+    }
+    
+    @Test
+    @DisplayName("addGold throws an exception when addition results in integer overflow")
+    void testAddGoldOverflow() {
+        int summand = Integer.MAX_VALUE - TEST_STARTING_GOLD + 1;
+        String expectedMessage = String.format(
+            "Overflow: cannot add %d to current gold: %d",
+            summand, TEST_STARTING_GOLD
+        );
+        
+        Exception exception = assertThrows(ArithmeticException.class, () -> {
+            general.addGold(summand);
+        });
+        
+        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals(TEST_STARTING_GOLD, general.getGold());
+    }
+    
+    @Test
+    @DisplayName("addGold throws an exception when trying to add negative value")
+    void testAddNegativeAmountOfGold() {
+        int summand = -10;
+        String expectedMessage = "summand should be a positive value";
+        
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            general.addGold(summand);
+        });
+        
+        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals(TEST_STARTING_GOLD, general.getGold());
+    }
+    
+    @Test
+    @DisplayName("addGold does nothing when summand equals to 0")
+    void testAddZeroGold() {
+        int summand = 0;
+        
+        assertDoesNotThrow(() -> general.addGold(summand));
+        
+        assertEquals(TEST_STARTING_GOLD, general.getGold());
+    }
+    
+    @Test
     @DisplayName("subtractGold subtracts gold correctly")
     void testSubtractGoldSubtractsGold() {
         int subtrahend = 10;

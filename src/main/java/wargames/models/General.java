@@ -28,16 +28,28 @@ public class General {
         return this.gold;
     }
     
-    public void subtractGold(int gold) throws InsufficientGoldException {
-        if (gold < 0) {
+    public void addGold(int goldToAdd) {
+        if (goldToAdd < 0) {
+            throw new IllegalArgumentException("summand should be a positive value");
+        }
+
+        if (goldToAdd > Integer.MAX_VALUE - this.gold) {
+            throw new ArithmeticException("Overflow: cannot add " + goldToAdd + " to current gold: " + this.gold);
+        }
+
+        this.gold += goldToAdd;
+    }
+    
+    public void subtractGold(int goldToSubtract) throws InsufficientGoldException {
+        if (goldToSubtract < 0) {
             throw new IllegalArgumentException("subtrahend should be a positive value");
         }
 
-        if (gold > this.gold) {
-            throw new InsufficientGoldException(this.gold, gold);
+        if (goldToSubtract > this.gold) {
+            throw new InsufficientGoldException(this.gold, goldToSubtract);
         }
         
-        this.gold -= gold;
+        this.gold -= goldToSubtract;
     }
     
     public void executeCommand(Command cmd) throws Exception {
