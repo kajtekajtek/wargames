@@ -23,6 +23,6 @@ public enum Rank {
                 return r;
             }
         }
-        throw new IllegalArgumentException("Unknown Rank value: " + value);
+        throw new IllegalArgumentException("incorrect Rank value: " + value);
     }
 }
