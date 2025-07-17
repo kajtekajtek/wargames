@@ -25,6 +25,11 @@ public class Army {
         }
         return totalStrength;
     }
+    
+    // predicatess
+    public boolean isEmpty() {
+        return this.soldiers.isEmpty();
+    }
 
     // mutators
     public void add(Soldier s) {

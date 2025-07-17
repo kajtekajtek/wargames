@@ -27,7 +27,7 @@ class GeneralTest {
                 "General's gold should be set");
         assertNotNull(general.getArmy(),
                 "General's army should not be null");
-        assertTrue(general.getArmy().getSoldiers().isEmpty(), 
+        assertTrue(general.getArmy().isEmpty(), 
                 "General's army should be empty");
         assertEquals(0, general.getArmy().getTotalStrength(), 
                 "Empty army's strength should equal to 0");

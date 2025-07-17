@@ -48,7 +48,7 @@ class ArmyTest {
     @Test
     @DisplayName("New army is empty and has total strength equal to 0")
     void testConstructor() {
-        assertTrue(army.getSoldiers().isEmpty());
+        assertTrue(army.isEmpty());
         assertEquals(0, army.getTotalStrength());
     }
 
@@ -86,7 +86,7 @@ class ArmyTest {
     void testKillAndRemoveRandomEmptyArmy() {
         assertDoesNotThrow(() -> army.killAndRemoveRandom(), 
                 "killAndRsoldierFactoryemoveRandom() should not throw an exception on the empty army");
-        assertTrue(army.getSoldiers().isEmpty(), 
+        assertTrue(army.isEmpty(), 
                 "Army should be empty");
         assertEquals(0, army.getTotalStrength(), 
                 "Total army strength should equal to 0");
@@ -137,7 +137,7 @@ class ArmyTest {
         army.killAndRemoveRandom();
         army.killAndRemoveRandom();
 
-        assertTrue(army.getSoldiers().isEmpty(), "Army should be empty");
+        assertTrue(army.isEmpty(), "Army should be empty");
         assertEquals(0, army.getTotalStrength(), 
                 "Total army strength should equal to 0");
     }
