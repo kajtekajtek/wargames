@@ -9,12 +9,16 @@ public class InsufficientGoldException extends Exception {
             "insufficient funds: you have %d, you need %d",
             have, need
         ));
+        
+        if (need - have <= 0) {
+            throw new IllegalArgumentException("tried to create insufficient gold exception with no deficit");
+        }
 
         this.have = have;
         this.need = need;
     }
 
     public int getDeficit() {
-        return have - need;
+        return need - have;
     }
 }

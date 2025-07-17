@@ -6,14 +6,18 @@ import java.util.Random;
 
 public class Army {
 
-    private List<Soldier>  soldiers;    
+    private List<Soldier> soldiers;    
 
     // constructors
     public Army() {
-        this.soldiers       = new ArrayList<Soldier>();
+        this.soldiers = new ArrayList<Soldier>();
     }
 
     // accessors
+    public int getSize() {
+        return this.soldiers.size();
+    }
+
     public List<Soldier> getSoldiers() {
         return this.soldiers;
     }    
@@ -24,6 +28,11 @@ public class Army {
             totalStrength += s.getStrength();
         }
         return totalStrength;
+    }
+    
+    // predicatess
+    public boolean isEmpty() {
+        return this.soldiers.isEmpty();
     }
 
     // mutators

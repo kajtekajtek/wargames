@@ -59,7 +59,7 @@ class SoldierTest {
             int exp       = soldier.getExp();
 
             // arrange soldier with given rank
-            soldier = factory.createSoldierWithRank(baseRank);
+            soldier = factory.createSoldier(baseRank);
 
             // increase exp to threshold
             soldier.increaseExpByN(threshold - exp);
