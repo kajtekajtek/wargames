@@ -10,7 +10,7 @@ import wargames.exceptions.InsufficientGoldException;
 
 public class RecruitSoldiersCommand extends Command {
 
-    private static final int RECRUITMENT_COST_PER_RANK = 10;
+    public static final int COST_PER_RANK = 10;
 
     private final SoldierFactory soldierFactory;
     private final int  quantity;
@@ -48,7 +48,7 @@ public class RecruitSoldiersCommand extends Command {
     }
     
     private static int calculateRecruitmentCost(int quantity, Rank rank) {
-        int costPerSoldier = RECRUITMENT_COST_PER_RANK * rank.getValue();
+        int costPerSoldier = COST_PER_RANK * rank.getValue();
         int totalCost = costPerSoldier * quantity;
         return totalCost;
     }
