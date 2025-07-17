@@ -57,7 +57,7 @@ class ArmyTest {
     void testAddSingle() {
         army.add(s1);
 
-        assertEquals(1, army.getSoldiers().size(), 
+        assertEquals(1, army.getSize(), 
                 "1 soldier in the army expected");
         assertTrue(army.getSoldiers().contains(s1), 
                 "Enlisted soldier should be in army");
@@ -75,7 +75,7 @@ class ArmyTest {
 
         int expectedStrength = s1.getStrength() + s2.getStrength()
             + s3.getStrength() + s4.getStrength();
-        assertEquals(4, army.getSoldiers().size(),
+        assertEquals(4, army.getSize(),
                 "There should be 4 soldiers in the army");
         assertEquals(expectedStrength, army.getTotalStrength(), 
                 "Total strength should be equal to all of the soldier's strength");

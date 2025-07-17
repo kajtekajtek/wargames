@@ -14,6 +14,10 @@ public class Army {
     }
 
     // accessors
+    public int getSize() {
+        return this.soldiers.size();
+    }
+
     public List<Soldier> getSoldiers() {
         return this.soldiers;
     }    
