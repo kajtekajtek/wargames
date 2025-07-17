@@ -8,7 +8,7 @@ import wargames.factories.SoldierFactory;
 
 import wargames.exceptions.InsufficientGoldException;
 
-public class RecruitNSoldiersWithRankCommand extends Command {
+public class RecruitSoldiersCommand extends Command {
 
     private static final int RECRUITMENT_COST_PER_RANK = 10;
 
@@ -16,10 +16,10 @@ public class RecruitNSoldiersWithRankCommand extends Command {
     private final int  quantity;
     private final Rank rank;
 
-    public RecruitNSoldiersWithRankCommand(General general, 
-                                           SoldierFactory factory,
-                                           int quantity,
-                                           Rank rank) {
+    public RecruitSoldiersCommand(General general, 
+                           SoldierFactory factory,
+                           int quantity,
+                           Rank rank) {
         super(general);
 
         this.soldierFactory = factory;
@@ -37,10 +37,10 @@ public class RecruitNSoldiersWithRankCommand extends Command {
         int recruitmentCost = calculateRecruitmentCost(quantity, rank);
         general.subtractGold(recruitmentCost);
         
-        recruitNSoldiersWithRank(quantity, rank); 
+        recruitSoldiers(quantity, rank); 
     }
     
-    private void recruitNSoldiersWithRank(int quantity, Rank rank) {
+    private void recruitSoldiers(int quantity, Rank rank) {
         for (int i = 0; i < quantity; i++) {
             Soldier newSoldier = soldierFactory.createSoldier(rank);
             this.general.getArmy().add(newSoldier);

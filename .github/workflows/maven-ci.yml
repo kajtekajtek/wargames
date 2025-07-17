@@ -28,4 +28,4 @@ jobs:
         with:
           name: coverage-report
           path: |
-            target/site/jacoco/jacoco.xml # Maven
+            target/site/jacoco/jacoco.xml
