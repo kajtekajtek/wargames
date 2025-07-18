@@ -1,21 +1,15 @@
 package wargames.commands;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.*;
+
+import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import wargames.exceptions.InsufficientGoldException;
 import wargames.factories.SoldierFactory;
-import wargames.models.General;
-import wargames.models.Rank;
-import wargames.models.Soldier;
+import wargames.models.*;
 
 public class RecruitSoldiersCommandTest {
     
