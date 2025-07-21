@@ -39,6 +39,12 @@ public class EventDispatcher implements Publisher {
         this.subscribers.add(s);
         
     }
+    
+    public void removeAllSubscribers() {
+        for (Subscriber s : subscribers) {
+            removeSubscriber(s);
+        }
+    }
 
     @Override
     public void removeSubscriber(Subscriber s) {
