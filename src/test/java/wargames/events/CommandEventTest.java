@@ -38,7 +38,7 @@ public class CommandEventTest {
         @Test
         @DisplayName("BeforeCommandEvent should carry General and Command parameters")
         void testBeforeCommandGeneralAndName() {
-            BeforeCommandEvent bef = new BeforeCommandEvent(general, command);
+            BeforeCommandEvent bef = new BeforeCommandEvent(command);
 
             assertSame(general, bef.getGeneral());
             assertEquals(command, bef.getCommand());
@@ -47,7 +47,7 @@ public class CommandEventTest {
         @Test
         @DisplayName("AfterCommandEvent should carry General and Command parameters")
         void testAfterCommandGeneralAndName() {
-            AfterCommandEvent aft = new AfterCommandEvent(general, command);
+            AfterCommandEvent aft = new AfterCommandEvent(command);
 
             assertSame(general, aft.getGeneral());
             assertEquals(command, aft.getCommand());
