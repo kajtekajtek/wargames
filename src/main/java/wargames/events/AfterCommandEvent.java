@@ -10,6 +10,7 @@ public class AfterCommandEvent implements Event {
         this.command = command;
     }
 
-    public General getGeneral() { return command.general; }
-    public Command getCommand() { return command; }
+    public General getGeneral()     { return command.general; }
+    public Command getCommand()     { return command; }
+    public String  getCommandName() { return command.getClass().getSimpleName(); }
 }
