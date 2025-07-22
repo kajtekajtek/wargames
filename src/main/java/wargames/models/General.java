@@ -53,6 +53,6 @@ public class General {
     }
     
     public void executeCommand(Command cmd) throws Exception {
-        cmd.execute();
+        cmd.executeAndUpdate();
     }
 }

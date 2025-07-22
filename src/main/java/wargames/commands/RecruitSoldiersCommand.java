@@ -5,7 +5,7 @@ import wargames.models.Soldier;
 import wargames.models.Rank;
 
 import wargames.factories.SoldierFactory;
-
+import wargames.events.publisher.EventDispatcher;
 import wargames.exceptions.InsufficientGoldException;
 
 public class RecruitSoldiersCommand extends Command {
@@ -17,10 +17,11 @@ public class RecruitSoldiersCommand extends Command {
     private final Rank rank;
 
     public RecruitSoldiersCommand(General general, 
-                           SoldierFactory factory,
-                           int quantity,
-                           Rank rank) {
-        super(general);
+                                SoldierFactory factory,
+                                int quantity,
+                                Rank rank,
+                                EventDispatcher dispatcher) {
+        super(general, dispatcher);
 
         this.soldierFactory = factory;
 

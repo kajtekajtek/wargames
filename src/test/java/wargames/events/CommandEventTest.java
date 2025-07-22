@@ -5,6 +5,7 @@ import org.junit.jupiter.api.*;
 
 import wargames.models.General;
 import wargames.commands.Command;
+import wargames.events.publisher.EventDispatcher;
 
 public class CommandEventTest {
 
@@ -13,7 +14,7 @@ public class CommandEventTest {
 
         private class TestCommand extends Command {
 
-            public TestCommand(General g) { super(g); }
+            public TestCommand(General g, EventDispatcher d) { super(g, d); }
 
             @Override
             public void execute() { }
@@ -22,7 +23,10 @@ public class CommandEventTest {
         private final String  generalName = "Helm Hammerhand";
         private final int     generalGold = 64;
         private final General general     = new General(generalName, generalGold);
-        private final Command command     = new TestCommand(general);
+
+        private final EventDispatcher dispatcher = EventDispatcher.getInstance();
+
+        private final Command command     = new TestCommand(general, dispatcher);
         private final String  commandName = command.getClass().getSimpleName();
 
         @Test
