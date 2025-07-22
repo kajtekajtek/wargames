@@ -52,4 +52,12 @@ public class RecruitSoldiersCommand extends Command {
         int totalCost = costPerSoldier * quantity;
         return totalCost;
     }
+
+    public int getQuantity() {
+        return this.quantity;
+    }
+
+    public Rank getRank() {
+        return this.rank;
+    }
 }
