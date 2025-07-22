@@ -1,16 +1,9 @@
 package wargames.events;
 
-import wargames.models.General;
 import wargames.commands.Command;
 
-public class AfterCommandEvent implements Event {
-    private final Command command;
+public class AfterCommandEvent extends CommandEvent {
 
-    public AfterCommandEvent(Command command) {
-        this.command = command;
-    }
+    public AfterCommandEvent(Command command) { super(command); }
 
-    public General getGeneral()     { return command.general; }
-    public Command getCommand()     { return command; }
-    public String  getCommandName() { return command.getClass().getSimpleName(); }
 }
