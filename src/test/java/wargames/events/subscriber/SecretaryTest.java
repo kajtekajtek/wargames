@@ -16,12 +16,13 @@ import wargames.events.subscribers.*;
 
 public class SecretaryTest {
 
-    private final String generalName = "Napoleon Bonaparte";
-    private final int    generalGold = 128;
+    private final String  generalName = "Napoleon Bonaparte";
+    private final int     generalGold = 128;
+    private final General general     = new General(generalName, generalGold);
 
-    private General               general;
-    private EventDispatcher       dispatcher;
-    private ByteArrayOutputStream out;
+    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
+    private final ByteArrayOutputStream out  = new ByteArrayOutputStream();
+
     
     private class TestCommand extends Command {
 
@@ -32,17 +33,13 @@ public class SecretaryTest {
     }
     
     @Nested
-    class testSecretaryUpdate {
+    class testUpdate {
 
         @BeforeEach
         void setUp() {
-            general = new General(generalName, generalGold);
-
-            EventDispatcher dispatcher = EventDispatcher.getInstance();
             dispatcher.removeAllSubscribers();
             dispatcher.addSubscriber(new Secretary());
 
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
             System.setOut(new PrintStream(out));
         }        
        
