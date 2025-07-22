@@ -26,7 +26,7 @@ public class SecretaryTest {
     
     private class TestCommand extends Command {
 
-            public TestCommand(General g) { super(g); }
+            public TestCommand(General g, EventDispatcher d) { super(g, d); }
 
             @Override
             public void execute() { }
@@ -51,7 +51,7 @@ public class SecretaryTest {
 
             @Test
             void testCommand() {
-                TestCommand testCommand = new TestCommand(general);
+                TestCommand testCommand = new TestCommand(general, dispatcher);
                 String      commandName = testCommand.getClass().getSimpleName();
 
                 dispatcher.updateSubscribers(new BeforeCommandEvent(testCommand));
@@ -70,7 +70,13 @@ public class SecretaryTest {
             void testRecruitSoldiersCommand() {
                 int  quantity = 1;
                 Rank rank     = Rank.PRIVATE;            
-                RecruitSoldiersCommand rsCommand = new RecruitSoldiersCommand(general, new SoldierFactory(), quantity, rank);
+
+                CommandFactory cmdFactory = new CommandFactory(
+                    dispatcher, new SoldierFactory()
+                );
+                RecruitSoldiersCommand rsCommand  = cmdFactory.createRecruitSoldiers(
+                    general, quantity, rank
+                );
 
                 String commandName       = rsCommand.getClass().getSimpleName();
                 String commandSubMessage = String.format(": %d soldiers of rank %s", quantity, rank);
