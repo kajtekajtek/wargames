@@ -1,21 +1,17 @@
 package wargames.commands;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.*;
+
+import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import wargames.events.publisher.EventDispatcher;
 import wargames.exceptions.InsufficientGoldException;
+import wargames.factories.CommandFactory;
 import wargames.factories.SoldierFactory;
-import wargames.models.General;
-import wargames.models.Rank;
-import wargames.models.Soldier;
+import wargames.models.*;
 
 public class RecruitSoldiersCommandTest {
     
@@ -23,23 +19,27 @@ public class RecruitSoldiersCommandTest {
     private static final int    TEST_STARTING_GOLD = 200;
     private static final int    COST_PER_RANK      = RecruitSoldiersCommand.COST_PER_RANK;
 
-    private SoldierFactory factory;
-    private General        general;
+    private final SoldierFactory  soldierFactory = new SoldierFactory();
+    private final EventDispatcher dispatcher     = EventDispatcher.getInstance();
+    private final CommandFactory  commandFactory = new CommandFactory(dispatcher, soldierFactory);
+
+    private General general;
 
     @BeforeEach
     void setUp() {
-        factory = new SoldierFactory();
         general = new General(TEST_GENERAL_NAME, TEST_STARTING_GOLD);
     }
     
     @Test
     @DisplayName("IllegalArgumentException on negative quantity")
     void testRecruitSoldiersCommandNegativeQuantity() {
-        int negativeQuantity = -10;
-        Command recruitSoldiersCommand = new RecruitSoldiersCommand(general, factory, negativeQuantity, Rank.PRIVATE);
+        int     negativeQuantity = -10;
+        Command recruitSoldiers  = commandFactory.createRecruitSoldiers(
+            general, negativeQuantity, Rank.PRIVATE
+        );
         
         assertThrows(IllegalArgumentException.class, () -> { 
-            general.executeCommand(recruitSoldiersCommand); 
+            general.executeCommand(recruitSoldiers); 
         });
         
         assertEquals(TEST_STARTING_GOLD, general.getGold());
@@ -49,10 +49,12 @@ public class RecruitSoldiersCommandTest {
     @Test
     @DisplayName("IllegalArgumentException on quantity equal to zero")
     void testRecruitSoldiersCommandZeroQuantity() {
-        Command recruitSoldiersCommand = new RecruitSoldiersCommand(general, factory, 0, Rank.PRIVATE);
+        Command recruitSoldiers = commandFactory.createRecruitSoldiers(
+            general, 0, Rank.PRIVATE
+        );
         
         assertThrows(IllegalArgumentException.class, () -> { 
-            general.executeCommand(recruitSoldiersCommand); 
+            general.executeCommand(recruitSoldiers); 
         });
         
         assertEquals(TEST_STARTING_GOLD, general.getGold());
@@ -71,9 +73,9 @@ public class RecruitSoldiersCommandTest {
             TEST_STARTING_GOLD, costPerSoldier * quantity
         );
 
-        Command recruitSoldiersCommand = new RecruitSoldiersCommand(general, factory, quantity, testRank);
+        Command recruitSoldiers = commandFactory.createRecruitSoldiers(general, quantity, testRank);
         Exception e = assertThrows(InsufficientGoldException.class, () -> { 
-            general.executeCommand(recruitSoldiersCommand); 
+            general.executeCommand(recruitSoldiers); 
         });
         
         assertEquals(TEST_STARTING_GOLD, general.getGold());
@@ -86,7 +88,9 @@ public class RecruitSoldiersCommandTest {
     void testRecruitSoldiersCommandOneSoldier() {
         Rank rank = Rank.PRIVATE;
         int soldierCost = rank.getValue() * COST_PER_RANK;
-        Command recruitSoldiersCommand = new RecruitSoldiersCommand(general, factory, 1, rank);
+        Command recruitSoldiersCommand = commandFactory.createRecruitSoldiers(
+            general, 1, rank
+        );
 
         assertDoesNotThrow(() -> general.executeCommand(recruitSoldiersCommand));
         
@@ -102,7 +106,10 @@ public class RecruitSoldiersCommandTest {
         int costPerSoldier = rank.getValue() * COST_PER_RANK;         
         int quantity       = TEST_STARTING_GOLD / costPerSoldier;
         int totalCost      = quantity * costPerSoldier;
-        Command recruitSoldiersCommand = new RecruitSoldiersCommand(general, factory, quantity, rank);
+
+        Command recruitSoldiersCommand = commandFactory.createRecruitSoldiers(
+            general, quantity, rank
+        );
         
         assertDoesNotThrow(() -> general.executeCommand(recruitSoldiersCommand));
         
@@ -123,7 +130,9 @@ public class RecruitSoldiersCommandTest {
 
         general.addGold(totalCost);
         
-        Command recruitSoldiersCommand = new RecruitSoldiersCommand(general, factory, quantity, rank);
+        Command recruitSoldiersCommand = commandFactory.createRecruitSoldiers(
+            general, quantity, rank
+        );
         
         assertDoesNotThrow(() -> general.executeCommand(recruitSoldiersCommand));
         
