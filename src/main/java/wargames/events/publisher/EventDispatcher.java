@@ -41,7 +41,7 @@ public class EventDispatcher implements Publisher {
     }
     
     public void removeAllSubscribers() {
-        for (Subscriber s : subscribers) {
+        for (Subscriber s : this.subscribers) {
             removeSubscriber(s);
         }
     }
