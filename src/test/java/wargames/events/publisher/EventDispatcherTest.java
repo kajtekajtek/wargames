@@ -22,6 +22,11 @@ public class EventDispatcherTest {
     private final EventDispatcher dispatcher  = EventDispatcher.getInstance();
     private final DummySubscriber subscriber1 = new DummySubscriber();
     private final DummySubscriber subscriber2 = new DummySubscriber();
+
+    @AfterEach
+    void tearDown() {
+        dispatcher.removeAllSubscribers();
+    }
     
     @Test
     @DisplayName("getInstance() should return the same instance of the EventDispatcher")

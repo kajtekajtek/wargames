@@ -8,21 +8,13 @@ public class Army {
 
     private List<Soldier> soldiers;    
 
-    // constructors
     public Army() {
         this.soldiers = new ArrayList<Soldier>();
     }
 
-    // accessors
-    public int getSize() {
-        return this.soldiers.size();
-    }
-
-    public List<Soldier> getSoldiers() {
-        return this.soldiers;
-    }    
-
-    public int getTotalStrength() {
+    public int           getSize()          { return this.soldiers.size(); }
+    public List<Soldier> getSoldiers()      { return this.soldiers; }    
+    public int           getTotalStrength() {
         int totalStrength = 0;
         for (Soldier s : this.soldiers) {
             totalStrength += s.getStrength();
@@ -30,15 +22,9 @@ public class Army {
         return totalStrength;
     }
     
-    // predicatess
-    public boolean isEmpty() {
-        return this.soldiers.isEmpty();
-    }
+    public boolean isEmpty() { return this.soldiers.isEmpty(); }
 
-    // mutators
-    public void add(Soldier s) {
-        this.soldiers.add(s);
-    }
+    public void add(Soldier s) { this.soldiers.add(s); }
 
     public void killAndRemoveRandom() {
         if (soldiers.isEmpty()) {

@@ -13,4 +13,4 @@ public class CommandEvent implements Event {
 
     public String  getCommandName() { return command.getClass().getSimpleName(); }
     public Command getCommand()     { return command; }
-}    
+}

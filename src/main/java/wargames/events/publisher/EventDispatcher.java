@@ -11,7 +11,7 @@ import wargames.events.subscribers.*;
 public class EventDispatcher implements Publisher { 
 
     private static volatile EventDispatcher instance;
-    private final List<Subscriber> subscribers = new CopyOnWriteArrayList<>();
+    private final List<Subscriber> subscribers;
 
     public static EventDispatcher getInstance() {
         /* 
@@ -32,6 +32,10 @@ public class EventDispatcher implements Publisher {
             }
             return instance;
         }
+    }
+
+    private EventDispatcher() {
+        subscribers = new CopyOnWriteArrayList<>();
     }
     
     @Override
