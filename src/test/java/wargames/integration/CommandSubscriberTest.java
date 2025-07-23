@@ -41,6 +41,11 @@ public class CommandSubscriberTest {
         dispatcher.removeAllSubscribers();
         dispatcher.addSubscriber(testSubscriber);
     }
+
+    @AfterEach
+    void tearDown() {
+        dispatcher.removeAllSubscribers();
+    }
     
     @Test
     @DisplayName("executeAndUpdate() should notify all of the dispatcher's subscribers before and after command execution")

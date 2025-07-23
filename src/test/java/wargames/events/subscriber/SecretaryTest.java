@@ -43,11 +43,11 @@ public class SecretaryTest {
             System.setOut(new PrintStream(out));
         }
 
-        @AfterAll
+        @AfterEach
         void tearDown() {
             dispatcher.removeAllSubscribers();
 
-            System.setOut(System.out)
+            System.setOut(System.out);
         }
        
         @Nested
