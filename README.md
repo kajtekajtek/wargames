@@ -30,7 +30,6 @@
             └── wargames
                 ├── commands
                 ├── events
-                │   ├── CommandEventTest.java
                 │   ├── publisher
                 │   └── subscriber
                 ├── exceptions
