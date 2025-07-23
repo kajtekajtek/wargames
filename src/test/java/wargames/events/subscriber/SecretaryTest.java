@@ -16,13 +16,7 @@ import wargames.events.subscribers.*;
 
 public class SecretaryTest {
 
-    private final String  generalName = "Napoleon Bonaparte";
-    private final int     generalGold = 128;
-    private final General general     = new General(generalName, generalGold);
-
-    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
-    private final ByteArrayOutputStream out  = new ByteArrayOutputStream();
-
+    private class TestEvent implements Event { }
     
     private class TestCommand extends Command {
 
@@ -31,9 +25,21 @@ public class SecretaryTest {
             @Override
             public void execute() { }
     }
+
+    private final String  generalName = "Napoleon Bonaparte";
+    private final int     generalGold = 128;
+    private final General general     = new General(generalName, generalGold);
+
+    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
+    private final ByteArrayOutputStream out  = new ByteArrayOutputStream();
     
     @Nested
     class testUpdate {
+
+        private final String beforeCommandMessage   = "Secretary: %s is about to execute %s";
+        private final String afterCommandMessage    = "Secretary: %s executed %s";
+        private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
+        private final String defaultEventMessage    = "%s event occured";
 
         @BeforeEach
         void setUp() {
@@ -49,12 +55,21 @@ public class SecretaryTest {
 
             System.setOut(System.out);
         }
+
+        @Test
+        @DisplayName("TestEvent")
+        void testEvent() {
+            String eventName       = TestEvent.class.getSimpleName();
+            String expectedMessage = String.format(defaultEventMessage, eventName);
+
+            dispatcher.updateSubscribers(new TestEvent());
+
+            String log = out.toString();
+            assertTrue(log.contains(expectedMessage));
+        }
        
         @Nested
         class BeforeAndAfterCommandEvent {
-
-            private final String beforeCommandMessage = "Secretary: %s is about to execute %s";
-            private final String afterCommandMessage  = "Secretary: %s executed %s";
 
             @Test
             void testCommand() {
@@ -86,7 +101,7 @@ public class SecretaryTest {
                 );
 
                 String commandName       = rsCommand.getClass().getSimpleName();
-                String commandSubMessage = String.format(": %d soldiers of rank %s", quantity, rank);
+                String commandSubMessage = String.format(recruitSoldiersMessage, quantity, rank);
 
                 String beforeRecruitmentMessage = String.format(
                     beforeCommandMessage, generalName, commandName
