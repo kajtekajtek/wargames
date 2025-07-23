@@ -1,18 +1,11 @@
 package wargames.models;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import org.junit.jupiter.api.*;
+
+import java.util.*;
 import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 
 import wargames.factories.SoldierFactory;
 
@@ -85,7 +78,7 @@ class ArmyTest {
     @DisplayName("killAndRemoveRandom() on an empty army does nothing")
     void testKillAndRemoveRandomEmptyArmy() {
         assertDoesNotThrow(() -> army.killAndRemoveRandom(), 
-                "killAndRsoldierFactoryemoveRandom() should not throw an exception on the empty army");
+                "killAndRemoveRandom() should not throw an exception on the empty army");
         assertTrue(army.isEmpty(), 
                 "Army should be empty");
         assertEquals(0, army.getTotalStrength(), 
