@@ -41,7 +41,14 @@ public class SecretaryTest {
             dispatcher.addSubscriber(new Secretary());
 
             System.setOut(new PrintStream(out));
-        }        
+        }
+
+        @AfterAll
+        void tearDown() {
+            dispatcher.removeAllSubscribers();
+
+            System.setOut(System.out)
+        }
        
         @Nested
         class BeforeAndAfterCommandEvent {
