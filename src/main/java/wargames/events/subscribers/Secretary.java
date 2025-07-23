@@ -10,6 +10,7 @@ public class Secretary implements Subscriber {
 
     private final String beforeCommandMessage = "%s is about to execute %s";
     private final String afterCommandMessage  = "%s executed %s";
+    private final String defaultEventMessage  = "%s event occured";
 
     private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
 
@@ -28,9 +29,7 @@ public class Secretary implements Subscriber {
         } else if (event instanceof AfterCommandEvent) {
             messageBody = getMessageBody((AfterCommandEvent) event);
         } else {
-            messageBody = String.format(
-                "unknown event type: %s", event.getClass().getSimpleName()
-            );
+            messageBody = getMessageBody(event);
         }
         message += messageBody;
 
@@ -56,6 +55,14 @@ public class Secretary implements Subscriber {
     private String getMessageBody(AfterCommandEvent event) {
          String messageBody = String.format(
             afterCommandMessage, event.getGeneralName(), event.getCommandName()
+        );
+
+        return messageBody;
+    }
+
+    private String getMessageBody(Event event) {
+         String messageBody = String.format(
+            defaultEventMessage, event.getClass().getSimpleName()
         );
 
         return messageBody;
