@@ -1,9 +1,6 @@
 package wargames.commands;
 
-import wargames.models.General;
-import wargames.models.Soldier;
-import wargames.models.Rank;
-
+import wargames.models.*;
 import wargames.factories.SoldierFactory;
 import wargames.events.publisher.EventDispatcher;
 import wargames.exceptions.InsufficientGoldException;

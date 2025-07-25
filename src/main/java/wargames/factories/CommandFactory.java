@@ -1,8 +1,10 @@
 package wargames.factories;
 
-import wargames.commands.RecruitSoldiersCommand;
-import wargames.events.publisher.EventDispatcher;
+import java.util.List;
+
+import wargames.commands.*;
 import wargames.models.*;
+import wargames.events.publisher.EventDispatcher;
 
 public class CommandFactory {
     private final EventDispatcher eventDispatcher;
@@ -21,5 +23,10 @@ public class CommandFactory {
                                           quantity, 
                                           rank, 
                                           eventDispatcher);
+    }
+    
+    public DrillSoldiersCommand createDrillSoldiers(General general,
+                                                    List<Soldier> soldiers) {
+        return new DrillSoldiersCommand(general, soldiers, eventDispatcher);
     } 
 }

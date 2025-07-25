@@ -9,8 +9,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import wargames.events.publisher.EventDispatcher;
 import wargames.exceptions.InsufficientGoldException;
-import wargames.factories.CommandFactory;
-import wargames.factories.SoldierFactory;
+import wargames.factories.*;
 import wargames.models.*;
 
 public class RecruitSoldiersCommandTest {
