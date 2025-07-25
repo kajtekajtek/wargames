@@ -16,6 +16,7 @@ public class DrillSoldiersCommandTest {
 
     private static final String TEST_GENERAL_NAME  = "Joshua";
     private static final int    TEST_STARTING_GOLD = 40;
+    private static final int    EXP_INCREASE       = DrillSoldiersCommand.EXP_INCREASE;
 
     private final SoldierFactory  soldierFactory = new SoldierFactory();
     private final EventDispatcher dispatcher     = EventDispatcher.getInstance();
@@ -46,8 +47,8 @@ public class DrillSoldiersCommandTest {
 
         assertDoesNotThrow(() -> cmd.execute());
 
-        assertEquals(2, s1.getExp());
-        assertEquals(2, s3.getExp());
+        assertEquals(1 + EXP_INCREASE, s1.getExp());
+        assertEquals(1 + EXP_INCREASE, s3.getExp());
         assertEquals(1, s2.getExp());
         assertEquals(1, s4.getExp());
         assertEquals(TEST_STARTING_GOLD - drillCost, general.getGold());
@@ -62,10 +63,10 @@ public class DrillSoldiersCommandTest {
 
         assertDoesNotThrow(() -> cmd.execute());
 
-        assertEquals(2, s1.getExp());
-        assertEquals(2, s2.getExp());
-        assertEquals(2, s3.getExp());
-        assertEquals(2, s4.getExp());
+        assertEquals(1 + EXP_INCREASE, s1.getExp());
+        assertEquals(1 + EXP_INCREASE, s2.getExp());
+        assertEquals(1 + EXP_INCREASE, s3.getExp());
+        assertEquals(1 + EXP_INCREASE, s4.getExp());
         assertEquals(TEST_STARTING_GOLD - drillCost, general.getGold());
     }
 
