@@ -82,13 +82,19 @@ public class DrillSoldiersCommandTest {
     }
     
     @Test
-    @DisplayName("DrillSoldiersCommand should throw exception on null argument")
-    void testThrowExceptionOnNullArgument() {
-        DrillSoldiersCommand cmdNullSoldiers = commandFactory.createDrillSoldiers(general, null);
+    @DisplayName("DrillSoldiersCommand should throw exception on null general argument")
+    void testThrowExceptionOnNullGeneral() {
         DrillSoldiersCommand cmdNullGeneral  = commandFactory.createDrillSoldiers(null, new ArrayList<Soldier>());
 
-        assertThrows(IllegalArgumentException.class, () -> { cmdNullSoldiers.execute(); });
         assertThrows(IllegalArgumentException.class, () -> { cmdNullGeneral.execute(); });
+    }
+    
+    @Test
+    @DisplayName("DrillSoldiersCommand should throw exception on null soldiers argument")
+    void testThrowExceptionOnNullSoldiers() {
+        DrillSoldiersCommand cmdNullSoldiers = commandFactory.createDrillSoldiers(general, null);
+
+        assertThrows(IllegalArgumentException.class, () -> { cmdNullSoldiers.execute(); });
     }
     
     @Test
