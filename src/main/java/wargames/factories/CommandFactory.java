@@ -29,4 +29,8 @@ public class CommandFactory {
                                                     List<Soldier> soldiers) {
         return new DrillSoldiersCommand(general, soldiers, eventDispatcher);
     } 
+    
+    public AttackCommand createAttack(General attacking, General attacked) {
+        return new AttackCommand(attacking, attacked, eventDispatcher);
+    }
 }
