@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
+import java.util.List;
 
 import wargames.commands.*;
-import wargames.models.General;
-import wargames.models.Rank;
+import wargames.models.*;
 import wargames.factories.*;
 import wargames.events.*;
 import wargames.events.publisher.*;
@@ -26,12 +26,18 @@ public class SecretaryTest {
             public void execute() { }
     }
 
-    private final String  generalName = "Napoleon Bonaparte";
-    private final int     generalGold = 128;
-    private final General general     = new General(generalName, generalGold);
-
     private final EventDispatcher dispatcher = EventDispatcher.getInstance();
     private final ByteArrayOutputStream out  = new ByteArrayOutputStream();
+
+    private final String  generalName = "Napoleon Bonaparte";
+    private final int     generalGold = 128;
+
+    private General general;
+
+    @BeforeEach
+    void setUp() {
+        general = new General(generalName, generalGold);
+    }
     
     @Nested
     class testUpdate {
@@ -39,6 +45,7 @@ public class SecretaryTest {
         private final String beforeCommandMessage   = "Secretary: %s is about to execute %s";
         private final String afterCommandMessage    = "Secretary: %s executed %s";
         private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
+        private final String drillSoldiersMessage   = ": drilled %d soldiers for %d gold";
         private final String defaultEventMessage    = "%s event occured";
 
         @BeforeEach
@@ -71,6 +78,9 @@ public class SecretaryTest {
         @Nested
         class BeforeAndAfterCommandEvent {
 
+            private final SoldierFactory soldierFactory = new SoldierFactory();
+            private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
+
             @Test
             void testCommand() {
                 TestCommand testCommand = new TestCommand(general, dispatcher);
@@ -93,10 +103,7 @@ public class SecretaryTest {
                 int  quantity = 1;
                 Rank rank     = Rank.PRIVATE;            
 
-                CommandFactory cmdFactory = new CommandFactory(
-                    dispatcher, new SoldierFactory()
-                );
-                RecruitSoldiersCommand rsCommand  = cmdFactory.createRecruitSoldiers(
+                RecruitSoldiersCommand rsCommand = commandFactory.createRecruitSoldiers(
                     general, quantity, rank
                 );
 
@@ -116,6 +123,42 @@ public class SecretaryTest {
                 String log = out.toString();
                 assertTrue(log.contains(beforeRecruitmentMessage));
                 assertTrue(log.contains(afterRecruitmentMessage));
+            }
+            
+            @Test
+            void testDrillSoldiersCommand() {
+                Army          generalArmy     = general.getArmy();
+                List<Soldier> soldiersToDrill = generalArmy.getSoldiers();
+
+                Rank rank          = Rank.PRIVATE;
+                int  amountToDrill = 10;
+                int  drillCost     = amountToDrill * rank.getValue();
+
+                for (int i = 0; i < amountToDrill; i++) {
+                    Soldier s = soldierFactory.createSoldier(rank);
+                    generalArmy.add(s);
+                }
+
+                DrillSoldiersCommand drillCmd = commandFactory.createDrillSoldiers(
+                    general, soldiersToDrill
+                );
+
+                String commandName       = drillCmd.getClass().getSimpleName();
+                String commandSubMessage = String.format(drillSoldiersMessage, amountToDrill, drillCost);
+
+                String beforeDrillMessage = String.format(
+                    beforeCommandMessage, generalName, commandName
+                ) + commandSubMessage;
+                String afterDrillMessage  = String.format(
+                    afterCommandMessage, generalName, commandName
+                ) + commandSubMessage;
+
+                dispatcher.updateSubscribers(new BeforeCommandEvent(drillCmd));
+                dispatcher.updateSubscribers(new AfterCommandEvent(drillCmd));
+
+                String log = out.toString();
+                assertTrue(log.contains(beforeDrillMessage));
+                assertTrue(log.contains(afterDrillMessage));
             }           
         }
     }
