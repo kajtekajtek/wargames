@@ -63,7 +63,7 @@ public class AttackCommandTest {
                      victoriousArmy.getTotalStrength());
         assertEquals(expectedDefeatedStrength,
                      defeatedArmy.getTotalStrength());
-        assertEquals((int) (STARTING_GOLD + loser.getGold() * GOLD_LOOT_PERCENTAGE),
+        assertEquals((int) (STARTING_GOLD + (STARTING_GOLD * GOLD_LOOT_PERCENTAGE)),
                      winner.getGold());
         assertEquals((int) (STARTING_GOLD * (1 - GOLD_LOOT_PERCENTAGE)),
                      loser.getGold());
@@ -134,7 +134,7 @@ public class AttackCommandTest {
     @ParameterizedTest(name = "attacked has no gold and the {0} wins")
     @ValueSource(strings = {"attacker", "attacked"}) 
     @DisplayName("attacked general has no gold; the attacker wins -> winner does not get the loot; else attacked general gets the loot normally")
-    void testAttackedHasNoGoldAndLoses(String winnerRole) {
+    void testAttackedHasNoGold(String winnerRole) {
         assertDoesNotThrow(() -> attacked.subtractGold(STARTING_GOLD));
 
         General winner = "attacker".equals(winnerRole) ? attacking : attacked;
@@ -158,8 +158,8 @@ public class AttackCommandTest {
         if (winnerRole == "attacker") {
             assertEquals(STARTING_GOLD, winner.getGold());
             assertEquals(0, loser.getGold());
-        } else {
-            assertEquals((int) (STARTING_GOLD + loser.getGold() * GOLD_LOOT_PERCENTAGE), 
+        } else if (winnerRole == "attacked") {
+            assertEquals((int) (STARTING_GOLD + (STARTING_GOLD * GOLD_LOOT_PERCENTAGE)), 
                          winner.getGold());
             assertEquals((int) (STARTING_GOLD * (1 - GOLD_LOOT_PERCENTAGE)),
                          loser.getGold());
