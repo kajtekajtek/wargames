@@ -2,6 +2,7 @@ package wargames.events.subscribers;
 
 import wargames.commands.*;
 import wargames.events.*;
+import wargames.models.Rank;
 
 public class Secretary implements Subscriber {
 
@@ -13,6 +14,7 @@ public class Secretary implements Subscriber {
     private final String defaultEventMessage  = "%s event occured";
 
     private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
+    private final String drillSoldiersMessage = ": drilled %d soldiers for %d gold";
 
     @Override
     public void update(Event event) {
@@ -21,63 +23,71 @@ public class Secretary implements Subscriber {
     }
 
     private String prepareMessage(Event event) {
-        String message = messagePrefix;
+        String message = ""; 
 
-        String messageBody;
-        if (event instanceof BeforeCommandEvent) {
-            messageBody = getMessageBody((BeforeCommandEvent) event);
-        } else if (event instanceof AfterCommandEvent) {
-            messageBody = getMessageBody((AfterCommandEvent) event);
-        } else {
-            messageBody = getMessageBody(event);
-        }
-        message += messageBody;
-
-        if (event instanceof CommandEvent) {
-            String subMessage;
-            subMessage = prepareSubMessage((CommandEvent) event);
-            message += subMessage;
-        }
-
+        message += messagePrefix;
+        message += prepareMessageBody(event);
         message += messageSuffix;
-        
+
         return message;
     }
+
+    private String prepareMessageBody(Event event) {
+        String messageBody = "";
+        
+        messageBody += prepareMessageSubject(event);
+        messageBody += prepareMessageDetails(event);
+
+        return messageBody;
+    }
     
-    private String getMessageBody(BeforeCommandEvent event) {
-        String messageBody = String.format(
-            beforeCommandMessage, event.getGeneralName(), event.getCommandName()
-        );
+    private String prepareMessageSubject(Event event) {
+        String messageSubject;
 
-        return messageBody;
-    }
+        if (event instanceof BeforeCommandEvent) {
+            BeforeCommandEvent e = (BeforeCommandEvent) event;
+            messageSubject = String.format(
+                beforeCommandMessage, e.getGeneralName(), e.getCommandName()
+            );
 
-    private String getMessageBody(AfterCommandEvent event) {
-         String messageBody = String.format(
-            afterCommandMessage, event.getGeneralName(), event.getCommandName()
-        );
+        } else if (event instanceof AfterCommandEvent) {
+            AfterCommandEvent e = (AfterCommandEvent) event;
+            messageSubject = String.format(
+                afterCommandMessage, e.getGeneralName(), e.getCommandName()
+            );
 
-        return messageBody;
-    }
-
-    private String getMessageBody(Event event) {
-         String messageBody = String.format(
-            defaultEventMessage, event.getClass().getSimpleName()
-        );
-
-        return messageBody;
-    }
-
-    private String prepareSubMessage(CommandEvent event) {
-        String subMessage;
-        if (event.getCommand() instanceof RecruitSoldiersCommand) {
-            RecruitSoldiersCommand command = (RecruitSoldiersCommand) event.getCommand();
-            subMessage = String.format(recruitSoldiersMessage, command.getQuantity(), command.getRank());
         } else {
-            subMessage = "";
+            messageSubject = String.format(
+                defaultEventMessage, event.getClass().getSimpleName()
+            );
         }
 
-        return subMessage;
+        return messageSubject;
+    }
+
+    private String prepareMessageDetails(Event event) {
+        String messageDetails = "";
+
+        if (!(event instanceof CommandEvent)) {
+            return messageDetails;
+        }
+
+        CommandEvent cmdEvent = (CommandEvent) event;
+        Command      command  = cmdEvent.getCommand();
+
+        if (command instanceof RecruitSoldiersCommand) {
+            RecruitSoldiersCommand rsCommand = (RecruitSoldiersCommand) command;
+            int  recruitedQuantity = rsCommand.getQuantity();
+            Rank recruitedRank     = rsCommand.getRank();
+            messageDetails = String.format(
+                recruitSoldiersMessage, recruitedQuantity, recruitedRank
+            );
+
+        } else {
+            messageDetails = "";
+        }
+
+        return messageDetails;
     }
 
     private void printMessageToSystemOut(String message) {
