@@ -52,6 +52,8 @@ public class DrillSoldiersCommandTest {
         assertEquals(1, s2.getExp());
         assertEquals(1, s4.getExp());
         assertEquals(TEST_STARTING_GOLD - drillCost, general.getGold());
+        assertEquals(drillCost, cmd.getCost());
+        assertEquals(2, cmd.getQuantity());
     }
 
     @Test
