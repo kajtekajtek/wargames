@@ -75,25 +75,44 @@ public class Secretary implements Subscriber {
 
         String messageDetails;
         if (command instanceof RecruitSoldiersCommand) {
-            RecruitSoldiersCommand rsCommand = (RecruitSoldiersCommand) command;
-            int  recruitedQuantity = rsCommand.getQuantity();
-            Rank recruitedRank     = rsCommand.getRank();
-            messageDetails = String.format(
-                recruitSoldiersMessage, recruitedQuantity, recruitedRank
+            messageDetails = prepareCommandDetails(
+                (RecruitSoldiersCommand) command
             );
 
         } else if (command instanceof DrillSoldiersCommand) {
-            DrillSoldiersCommand drillCommand = (DrillSoldiersCommand) command;
-            int drilledQuantity = drillCommand.getQuantity();
-            int drillCost       = drillCommand.getCost();
-            messageDetails = String.format(
-                drillSoldiersMessage, drilledQuantity, drillCost
+            messageDetails = prepareCommandDetails(
+                (DrillSoldiersCommand) command
             );
+
         } else {
             messageDetails = "";
         }
 
         return messageDetails;
+    }
+
+    private String prepareCommandDetails(RecruitSoldiersCommand cmd) {
+        String commandDetails;
+        int  recruitedQuantity = cmd.getQuantity();
+        Rank recruitedRank     = cmd.getRank();
+
+        commandDetails = String.format(
+            recruitSoldiersMessage, recruitedQuantity, recruitedRank
+        );
+
+        return commandDetails;
+    }
+
+    private String prepareCommandDetails(DrillSoldiersCommand cmd) {
+        String commandDetails;
+        int drilledQuantity = cmd.getQuantity();
+        int drillCost       = cmd.getCost();
+
+        commandDetails = String.format(
+            drillSoldiersMessage, drilledQuantity, drillCost
+        );
+
+        return commandDetails;
     }
 
     private void printMessageToSystemOut(String message) {
