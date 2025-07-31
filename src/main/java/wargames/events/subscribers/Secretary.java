@@ -9,12 +9,12 @@ public class Secretary implements Subscriber {
     private final String messagePrefix = "Secretary: ";
     private final String messageSuffix = "\n";
 
-    private final String beforeCommandMessage = "%s is about to execute %s";
-    private final String afterCommandMessage  = "%s executed %s";
-    private final String defaultEventMessage  = "%s event occured";
+    private final String beforeCommandSubject = "%s is about to execute %s";
+    private final String afterCommandSubject  = "%s executed %s";
+    private final String defaultEventSubject  = "%s event occured";
 
-    private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
-    private final String drillSoldiersMessage   = ": %d soldiers for %d gold";
+    private final String recruitSoldiersDetails = ": %d soldiers of rank %s";
+    private final String drillSoldiersDetails   = ": %d soldiers for %d gold";
 
     @Override
     public void update(Event event) {
@@ -44,25 +44,37 @@ public class Secretary implements Subscriber {
     private String prepareMessageSubject(Event event) {
         String messageSubject;
 
-        if (event instanceof BeforeCommandEvent) {
-            BeforeCommandEvent e = (BeforeCommandEvent) event;
-            messageSubject = String.format(
-                beforeCommandMessage, e.getGeneralName(), e.getCommandName()
-            );
-
-        } else if (event instanceof AfterCommandEvent) {
-            AfterCommandEvent e = (AfterCommandEvent) event;
-            messageSubject = String.format(
-                afterCommandMessage, e.getGeneralName(), e.getCommandName()
-            );
-
+        if (event instanceof CommandEvent) {
+            messageSubject = prepareEventSubject((CommandEvent) event);
         } else {
-            messageSubject = String.format(
-                defaultEventMessage, event.getClass().getSimpleName()
-            );
+            messageSubject = prepareEventSubject(event);
         }
 
         return messageSubject;
+    }
+
+    private String prepareEventSubject(CommandEvent cmdEv) {
+        String eventSubject;
+
+        eventSubject = String.format(
+                cmdEv instanceof BeforeCommandEvent ? 
+                beforeCommandSubject : afterCommandSubject,
+                cmdEv.getGeneralName(), 
+                cmdEv.getCommandName()
+            );
+
+        return eventSubject;
+    }
+
+    private String prepareEventSubject(Event ev) {
+        String eventSubject;
+
+        eventSubject = String.format(
+                defaultEventSubject, 
+                ev.getClass().getSimpleName()
+            );
+
+        return eventSubject;
     }
 
     private String prepareMessageDetails(Event event) {
@@ -97,7 +109,7 @@ public class Secretary implements Subscriber {
         Rank recruitedRank     = cmd.getRank();
 
         commandDetails = String.format(
-            recruitSoldiersMessage, recruitedQuantity, recruitedRank
+            recruitSoldiersDetails, recruitedQuantity, recruitedRank
         );
 
         return commandDetails;
@@ -109,7 +121,7 @@ public class Secretary implements Subscriber {
         int drillCost       = cmd.getCost();
 
         commandDetails = String.format(
-            drillSoldiersMessage, drilledQuantity, drillCost
+            drillSoldiersDetails, drilledQuantity, drillCost
         );
 
         return commandDetails;
