@@ -45,7 +45,7 @@ public class SecretaryTest {
         private final String beforeCommandMessage   = "Secretary: %s is about to execute %s";
         private final String afterCommandMessage    = "Secretary: %s executed %s";
         private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
-        private final String drillSoldiersMessage   = ": drilled %d soldiers for %d gold";
+        private final String drillSoldiersMessage   = ": %d soldiers for %d gold";
         private final String defaultEventMessage    = "%s event occured";
 
         @BeforeEach

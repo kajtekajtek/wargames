@@ -14,7 +14,7 @@ public class Secretary implements Subscriber {
     private final String defaultEventMessage  = "%s event occured";
 
     private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
-    private final String drillSoldiersMessage = ": drilled %d soldiers for %d gold";
+    private final String drillSoldiersMessage   = ": %d soldiers for %d gold";
 
     @Override
     public void update(Event event) {
@@ -66,15 +66,14 @@ public class Secretary implements Subscriber {
     }
 
     private String prepareMessageDetails(Event event) {
-        String messageDetails = "";
-
         if (!(event instanceof CommandEvent)) {
-            return messageDetails;
+            return "";
         }
 
         CommandEvent cmdEvent = (CommandEvent) event;
         Command      command  = cmdEvent.getCommand();
 
+        String messageDetails;
         if (command instanceof RecruitSoldiersCommand) {
             RecruitSoldiersCommand rsCommand = (RecruitSoldiersCommand) command;
             int  recruitedQuantity = rsCommand.getQuantity();
@@ -83,6 +82,13 @@ public class Secretary implements Subscriber {
                 recruitSoldiersMessage, recruitedQuantity, recruitedRank
             );
 
+        } else if (command instanceof DrillSoldiersCommand) {
+            DrillSoldiersCommand drillCommand = (DrillSoldiersCommand) command;
+            int drilledQuantity = drillCommand.getQuantity();
+            int drillCost       = drillCommand.getCost();
+            messageDetails = String.format(
+                drillSoldiersMessage, drilledQuantity, drillCost
+            );
         } else {
             messageDetails = "";
         }
