@@ -3,6 +3,8 @@ package wargames.events.subscriber;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.*;
+import org.junit.jupiter.params.provider.*;
 
 import java.io.*;
 import java.util.List;
@@ -54,6 +56,10 @@ public class SecretaryTest {
 
         private final String recruitSoldiersDetails = ": %d soldiers of rank %s";
         private final String drillSoldiersDetails   = ": %d soldiers for %d gold";
+        private final String beforeAttackDetails    = ": attacking %s";
+        private final String afterAttackDetailsWon  = ": won with %s";
+        private final String afterAttackDetailsLost = ": lost with %s";
+        private final String afterAttackDetailsDrew = ": drew with %s";
 
         @BeforeEach
         void setUp() {
@@ -157,7 +163,35 @@ public class SecretaryTest {
                 String log = out.toString();
                 assertTrue(log.contains(expectedBeforeMessage));
                 assertTrue(log.contains(expectedAfterMessage));
-            }           
+            }
+
+            @ParameterizedTest(name = "Logging AttackCommand details with attacked army size = {0}")
+            @ValueSource(ints = {0, 1, 2})
+            @DisplayName("Should log attacking and attacked general's name and battle outcome")
+            void testAttackCommand(int attackedArmySize) {
+                Army attackingArmy = general.getArmy();
+                attackingArmy.add(soldierFactory.createPrivate());
+
+                General attackedGeneral = new General("Duke off Wellington", generalGold);
+                Army    attackedArmy = attackedGeneral.getArmy();
+                for (int i = 0; i < attackedArmySize; i++) {
+                    attackedArmy.add(soldierFactory.createPrivate());
+                }
+
+                AttackCommand aCommand = commandFactory.createAttack(general, attackedGeneral);
+
+                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(aCommand);
+                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(aCommand);
+
+                dispatcher.updateSubscribers(beforeCmdEvent);
+                dispatcher.updateSubscribers(afterCmdEvent);
+
+                String expectedBeforeMessage = prepareExpectedMessage(beforeCmdEvent);
+                String expectedAfterMessage  = prepareExpectedMessage(afterCmdEvent);
+                String log = out.toString();
+                assertTrue(log.contains(expectedBeforeMessage));
+                assertTrue(log.contains(expectedAfterMessage));
+            }
         }
 
         private String prepareExpectedMessage(Event event) {
@@ -196,6 +230,9 @@ public class SecretaryTest {
             } else if (command instanceof DrillSoldiersCommand) {
                 messageDetails = prepareCommandDetails((DrillSoldiersCommand) command);
 
+            } else if (command instanceof AttackCommand) {
+                messageDetails = prepareCommandDetails((AttackCommand) command);
+
             } else {
                 messageDetails = "";
 
@@ -224,6 +261,35 @@ public class SecretaryTest {
 
             commandDetails = String.format(
                 drillSoldiersDetails, drilledQuantity, drillCost
+            );
+
+            return commandDetails;
+        }
+
+        private String prepareCommandDetails(AttackCommand cmd) {
+            String  commandDetails, detailsTemplate;
+            String  attackingName = cmd.getAttacking().getName();
+            String  attackedName  = cmd.getAttacked().getName();
+            Boolean attackIsOver  = cmd.isAttackOver();
+
+            if (!attackIsOver) {
+                detailsTemplate = beforeAttackDetails;
+
+            } else {
+                General winner = cmd.getWinner();
+
+                if (winner == null) {
+                    detailsTemplate = afterAttackDetailsDrew;
+
+                } else {
+                    detailsTemplate = winner.getName() == attackingName 
+                                      ? afterAttackDetailsWon 
+                                      : afterAttackDetailsLost;
+                }
+            }
+
+            commandDetails = String.format(
+                detailsTemplate, attackedName
             );
 
             return commandDetails;
