@@ -18,63 +18,47 @@ import wargames.events.subscribers.*;
 
 public class SecretaryTest {
 
-    /* toy event implementation */
-    private class TestEvent implements Event { }
-    
-    /* toy command implementation */
-    private class TestCommand extends Command {
+    private static final EventDispatcher dispatcher = EventDispatcher.getInstance();
+    private static final ByteArrayOutputStream out  = new ByteArrayOutputStream();
 
-            public TestCommand(General g, EventDispatcher d) { super(g, d); }
+    @BeforeAll
+    private static void setUp() {
+        dispatcher.removeAllSubscribers();
+        dispatcher.addSubscriber(new Secretary());
 
-            @Override
-            public void execute() { }
+        System.setOut(new PrintStream(out));
     }
 
-    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
-    private final ByteArrayOutputStream out  = new ByteArrayOutputStream();
+    @AfterAll
+    private static void tearDown() {
+        dispatcher.removeAllSubscribers();
 
-    private final String generalName = "Napoleon Bonaparte";
-    private final int    generalGold = 128;
-
-    private General general;
-
-    @BeforeEach
-    void setUp() {
-        general = new General(generalName, generalGold);
+        System.setOut(System.out);
     }
     
     @Nested
-    @DisplayName("Should log event information message to system out")
+    @DisplayName("Should log event message to system out on update")
     class UpdateTest {
 
-        private final String messagePrefix = "Secretary: ";
-        private final String messageSuffix = "\n";
+        /* toy event implementation */
+        private class TestEvent implements Event { }
 
-        private final String defaultEventSubject  = "%s event occured";
-        private final String beforeCommandSubject = "%s is about to execute %s";
-        private final String afterCommandSubject  = "%s executed %s";
+        /* all log messages */
+        private final String expectedMessagePrefix = "Secretary: ";
+        private final String expectedMessageSuffix = "\n";
 
-        private final String recruitSoldiersDetails = ": %d soldiers of rank %s";
-        private final String drillSoldiersDetails   = ": %d soldiers for %d gold";
-        private final String beforeAttackDetails    = ": attacking %s";
-        private final String afterAttackDetailsWon  = ": won with %s";
-        private final String afterAttackDetailsLost = ": lost with %s";
-        private final String afterAttackDetailsDrew = ": drew with %s";
+        /* event specific */
+        private final String eventSubjectTemplate  = "%s event occured";
+        private final String BfrCmdSubjectTemplate = "%s is about to execute %s";
+        private final String AfrCmdSubjectTemplate = "%s executed %s";
 
-        @BeforeEach
-        void setUp() {
-            dispatcher.removeAllSubscribers();
-            dispatcher.addSubscriber(new Secretary());
-
-            System.setOut(new PrintStream(out));
-        }
-
-        @AfterEach
-        void tearDown() {
-            dispatcher.removeAllSubscribers();
-
-            System.setOut(System.out);
-        }
+        /* command specific */
+        private final String recruitmentDetailsTemplate = ": %d soldiers of rank %s";
+        private final String drillDetailsTemplate       = ": %d soldiers for %d gold";
+        private final String preAttackDetailsTemplate   = ": attacking %s";
+        private final String wonAttackDetailsTemplate   = ": won with %s";
+        private final String lostAttackDetailsTemplate  = ": lost with %s";
+        private final String drewAttackDetailsTemplate  = ": drew with %s";
 
         @Test
         @DisplayName("Should log event name using default event template")
@@ -90,8 +74,27 @@ public class SecretaryTest {
         @DisplayName("Should log command execution messages on CommandEvent update")
         class UpdateCommandEventTest {
 
+            /* toy command implementation */
+            private class TestCommand extends Command {
+
+                public TestCommand(General g, EventDispatcher d) { super(g, d); }
+
+                @Override
+                public void execute() { }
+            }
+
             private final SoldierFactory soldierFactory = new SoldierFactory();
             private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
+
+            private final String generalName = "Napoleon Bonaparte";
+            private final int    generalGold = 128;
+
+            private General general;
+
+            @BeforeEach
+            void setUp() {
+                general = new General(generalName, generalGold);
+            }
 
             @Test
             @DisplayName("Should log only command name before and after TestCommand")
@@ -193,7 +196,7 @@ public class SecretaryTest {
         private String prepareExpectedMessage(Event event) {
             String expectedMessage = "";
 
-            expectedMessage += messagePrefix;
+            expectedMessage += expectedMessagePrefix;
 
             if (event instanceof CommandEvent) {
                 expectedMessage += prepareExpectedMessageSubject((CommandEvent) event);
@@ -203,7 +206,7 @@ public class SecretaryTest {
 
             }
 
-            expectedMessage += messageSuffix;
+            expectedMessage += expectedMessageSuffix;
 
             return expectedMessage;
         }
@@ -212,10 +215,11 @@ public class SecretaryTest {
             String messageSubject;
 
             String subjectTemplate = ce instanceof BeforeCommandEvent ?
-                                        beforeCommandSubject : afterCommandSubject;
+                                        BfrCmdSubjectTemplate : AfrCmdSubjectTemplate;
 
             Command command     = ce.getCommand();
             String  commandName = ce.getCommandName();
+            String  generalName = ce.getGeneralName();
 
             messageSubject = String.format(subjectTemplate, generalName, commandName);
 
@@ -244,7 +248,7 @@ public class SecretaryTest {
             Rank recruitedRank     = cmd.getRank();
 
             commandDetails = String.format(
-                recruitSoldiersDetails, recruitedQuantity, recruitedRank
+                recruitmentDetailsTemplate, recruitedQuantity, recruitedRank
             );
 
             return commandDetails;
@@ -256,7 +260,7 @@ public class SecretaryTest {
             int drillCost       = cmd.getCost();
 
             commandDetails = String.format(
-                drillSoldiersDetails, drilledQuantity, drillCost
+                drillDetailsTemplate, drilledQuantity, drillCost
             );
 
             return commandDetails;
@@ -269,18 +273,18 @@ public class SecretaryTest {
             Boolean attackIsOver  = cmd.isAttackOver();
 
             if (!attackIsOver) {
-                detailsTemplate = beforeAttackDetails;
+                detailsTemplate = preAttackDetailsTemplate;
 
             } else {
                 General winner = cmd.getWinner();
 
                 if (winner == null) {
-                    detailsTemplate = afterAttackDetailsDrew;
+                    detailsTemplate = drewAttackDetailsTemplate;
 
                 } else {
                     detailsTemplate = winner.getName() == attackingName 
-                                      ? afterAttackDetailsWon 
-                                      : afterAttackDetailsLost;
+                                      ? wonAttackDetailsTemplate 
+                                      : lostAttackDetailsTemplate;
                 }
             }
 
@@ -295,7 +299,7 @@ public class SecretaryTest {
             String eventName, messageSubject;
 
             eventName = e.getClass().getSimpleName();
-            messageSubject = String.format(defaultEventSubject, eventName);
+            messageSubject = String.format(eventSubjectTemplate, eventName);
 
             return messageSubject;
         }
