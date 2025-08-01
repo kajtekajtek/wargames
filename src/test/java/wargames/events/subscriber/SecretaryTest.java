@@ -164,7 +164,7 @@ public class SecretaryTest {
                 Army attackingArmy = general.getArmy();
                 attackingArmy.add(soldierFactory.createPrivate());
 
-                General attackedGeneral = new General("Duke off Wellington", generalGold);
+                General attackedGeneral = new General("Duke of Wellington", generalGold);
                 Army    attackedArmy = attackedGeneral.getArmy();
                 for (int i = 0; i < attackedArmySize; i++) {
                     attackedArmy.add(soldierFactory.createPrivate());
