@@ -83,9 +83,7 @@ public class SecretaryTest {
 
             dispatcher.updateSubscribers(new TestEvent());
 
-            String expectedMessage = prepareExpectedMessage(testEvent);
-            String log = out.toString();
-            assertTrue(log.contains(expectedMessage));
+            assertExpectedMessage(testEvent);
         }
        
         @Nested
@@ -105,11 +103,8 @@ public class SecretaryTest {
                 dispatcher.updateSubscribers(beforeCmdEvent);
                 dispatcher.updateSubscribers(afterCmdEvent);
 
-                String expectedBeforeMsg = prepareExpectedMessage(beforeCmdEvent);
-                String expectedAfterMsg  = prepareExpectedMessage(afterCmdEvent);
-                String log = out.toString();
-                assertTrue(log.contains(expectedBeforeMsg));
-                assertTrue(log.contains(expectedAfterMsg));
+                assertExpectedMessage(beforeCmdEvent);
+                assertExpectedMessage(afterCmdEvent);
             }
             
             @Test
@@ -127,11 +122,8 @@ public class SecretaryTest {
                 dispatcher.updateSubscribers(beforeCmdEvent);
                 dispatcher.updateSubscribers(afterCmdEvent);
 
-                String expectedBeforeMessage = prepareExpectedMessage(beforeCmdEvent);
-                String expectedAfterMessage  = prepareExpectedMessage(afterCmdEvent);
-                String log = out.toString();
-                assertTrue(log.contains(expectedBeforeMessage));
-                assertTrue(log.contains(expectedAfterMessage));
+                assertExpectedMessage(beforeCmdEvent);
+                assertExpectedMessage(afterCmdEvent);
             }
             
             @Test
@@ -158,11 +150,8 @@ public class SecretaryTest {
                 dispatcher.updateSubscribers(beforeCmdEvent);
                 dispatcher.updateSubscribers(afterCmdEvent);
 
-                String expectedBeforeMessage = prepareExpectedMessage(beforeCmdEvent);
-                String expectedAfterMessage  = prepareExpectedMessage(afterCmdEvent);
-                String log = out.toString();
-                assertTrue(log.contains(expectedBeforeMessage));
-                assertTrue(log.contains(expectedAfterMessage));
+                assertExpectedMessage(beforeCmdEvent);
+                assertExpectedMessage(afterCmdEvent);
             }
 
             @ParameterizedTest(name = "Logging AttackCommand details with attacked army size = {0}")
@@ -178,7 +167,9 @@ public class SecretaryTest {
                     attackedArmy.add(soldierFactory.createPrivate());
                 }
 
-                AttackCommand aCommand = commandFactory.createAttack(general, attackedGeneral);
+                AttackCommand aCommand = commandFactory.createAttack(
+                    general, attackedGeneral
+                );
 
                 BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(aCommand);
                 AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(aCommand);
@@ -186,12 +177,17 @@ public class SecretaryTest {
                 dispatcher.updateSubscribers(beforeCmdEvent);
                 dispatcher.updateSubscribers(afterCmdEvent);
 
-                String expectedBeforeMessage = prepareExpectedMessage(beforeCmdEvent);
-                String expectedAfterMessage  = prepareExpectedMessage(afterCmdEvent);
-                String log = out.toString();
-                assertTrue(log.contains(expectedBeforeMessage));
-                assertTrue(log.contains(expectedAfterMessage));
+                assertExpectedMessage(beforeCmdEvent);
+                assertExpectedMessage(afterCmdEvent);
             }
+        }
+
+        private void assertExpectedMessage(Event e) {
+            String expectedMessage = prepareExpectedMessage(e);
+
+            String log = out.toString();
+
+            assertTrue(log.contains(expectedMessage)); 
         }
 
         private String prepareExpectedMessage(Event event) {
