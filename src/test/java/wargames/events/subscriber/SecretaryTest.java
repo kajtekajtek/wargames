@@ -16,8 +16,10 @@ import wargames.events.subscribers.*;
 
 public class SecretaryTest {
 
+    /* toy event implementation */
     private class TestEvent implements Event { }
     
+    /* toy command implementation */
     private class TestCommand extends Command {
 
             public TestCommand(General g, EventDispatcher d) { super(g, d); }
@@ -29,8 +31,8 @@ public class SecretaryTest {
     private final EventDispatcher dispatcher = EventDispatcher.getInstance();
     private final ByteArrayOutputStream out  = new ByteArrayOutputStream();
 
-    private final String  generalName = "Napoleon Bonaparte";
-    private final int     generalGold = 128;
+    private final String generalName = "Napoleon Bonaparte";
+    private final int    generalGold = 128;
 
     private General general;
 
@@ -40,13 +42,18 @@ public class SecretaryTest {
     }
     
     @Nested
+    @DisplayName("Should log event information message to system out")
     class testUpdate {
 
-        private final String beforeCommandMessage   = "Secretary: %s is about to execute %s";
-        private final String afterCommandMessage    = "Secretary: %s executed %s";
-        private final String recruitSoldiersMessage = ": %d soldiers of rank %s";
-        private final String drillSoldiersMessage   = ": %d soldiers for %d gold";
-        private final String defaultEventMessage    = "%s event occured";
+        private final String messagePrefix = "Secretary: ";
+        private final String messageSuffix = "\n";
+
+        private final String defaultEventSubject  = "%s event occured";
+        private final String beforeCommandSubject = "%s is about to execute %s";
+        private final String afterCommandSubject  = "%s executed %s";
+
+        private final String recruitSoldiersDetails = ": %d soldiers of rank %s";
+        private final String drillSoldiersDetails   = ": %d soldiers for %d gold";
 
         @BeforeEach
         void setUp() {
@@ -64,102 +71,172 @@ public class SecretaryTest {
         }
 
         @Test
-        @DisplayName("TestEvent")
+        @DisplayName("Should log event name using default event template")
         void testEvent() {
-            String eventName       = TestEvent.class.getSimpleName();
-            String expectedMessage = String.format(defaultEventMessage, eventName);
+            TestEvent testEvent = new TestEvent();
 
             dispatcher.updateSubscribers(new TestEvent());
 
+            String expectedMessage = prepareExpectedMessage(testEvent);
             String log = out.toString();
             assertTrue(log.contains(expectedMessage));
         }
        
         @Nested
-        class BeforeAndAfterCommandEvent {
+        @DisplayName("Should log command execution messages on CommandEvent update")
+        class testCommandEvent {
 
             private final SoldierFactory soldierFactory = new SoldierFactory();
             private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
 
             @Test
+            @DisplayName("Should log only command name before and after TestCommand")
             void testCommand() {
-                TestCommand testCommand = new TestCommand(general, dispatcher);
-                String      commandName = testCommand.getClass().getSimpleName();
+                TestCommand        testCommand    = new TestCommand(general, dispatcher);
+                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(testCommand);
+                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(testCommand);
 
-                dispatcher.updateSubscribers(new BeforeCommandEvent(testCommand));
-                dispatcher.updateSubscribers(new AfterCommandEvent(testCommand));
+                dispatcher.updateSubscribers(beforeCmdEvent);
+                dispatcher.updateSubscribers(afterCmdEvent);
 
+                String expectedBeforeMsg = prepareExpectedMessage(beforeCmdEvent);
+                String expectedAfterMsg  = prepareExpectedMessage(afterCmdEvent);
                 String log = out.toString();
-                assertTrue(log.contains(String.format(
-                    beforeCommandMessage, generalName, commandName
-                )));
-                assertTrue(log.contains(String.format(
-                    afterCommandMessage, generalName, commandName
-                )));
+                assertTrue(log.contains(expectedBeforeMsg));
+                assertTrue(log.contains(expectedAfterMsg));
             }
             
             @Test
+            @DisplayName("Should log recruited soldiers quantity and rank before and affter RecruitSoldiersCommand")
             void testRecruitSoldiersCommand() {
                 int  quantity = 1;
                 Rank rank     = Rank.PRIVATE;            
-
                 RecruitSoldiersCommand rsCommand = commandFactory.createRecruitSoldiers(
                     general, quantity, rank
                 );
 
-                String commandName       = rsCommand.getClass().getSimpleName();
-                String commandSubMessage = String.format(recruitSoldiersMessage, quantity, rank);
+                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(rsCommand);
+                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(rsCommand);
 
-                String beforeRecruitmentMessage = String.format(
-                    beforeCommandMessage, generalName, commandName
-                ) + commandSubMessage;
-                String afterRecruitmentMessage  = String.format(
-                    afterCommandMessage, generalName, commandName
-                ) + commandSubMessage;
+                dispatcher.updateSubscribers(beforeCmdEvent);
+                dispatcher.updateSubscribers(afterCmdEvent);
 
-                dispatcher.updateSubscribers(new BeforeCommandEvent(rsCommand));
-                dispatcher.updateSubscribers(new AfterCommandEvent(rsCommand));
-
+                String expectedBeforeMessage = prepareExpectedMessage(beforeCmdEvent);
+                String expectedAfterMessage  = prepareExpectedMessage(afterCmdEvent);
                 String log = out.toString();
-                assertTrue(log.contains(beforeRecruitmentMessage));
-                assertTrue(log.contains(afterRecruitmentMessage));
+                assertTrue(log.contains(expectedBeforeMessage));
+                assertTrue(log.contains(expectedAfterMessage));
             }
             
             @Test
+            @DisplayName("Should log drilled soldiers amount and drill's cost before and after DrillSoldiersCommand")
             void testDrillSoldiersCommand() {
                 Army          generalArmy     = general.getArmy();
                 List<Soldier> soldiersToDrill = generalArmy.getSoldiers();
 
                 Rank rank          = Rank.PRIVATE;
                 int  amountToDrill = 10;
-                int  drillCost     = amountToDrill * rank.getValue();
 
                 for (int i = 0; i < amountToDrill; i++) {
                     Soldier s = soldierFactory.createSoldier(rank);
                     generalArmy.add(s);
                 }
 
-                DrillSoldiersCommand drillCmd = commandFactory.createDrillSoldiers(
+                DrillSoldiersCommand dCommand = commandFactory.createDrillSoldiers(
                     general, soldiersToDrill
                 );
 
-                String commandName       = drillCmd.getClass().getSimpleName();
-                String commandSubMessage = String.format(drillSoldiersMessage, amountToDrill, drillCost);
+                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(dCommand);
+                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(dCommand);
 
-                String beforeDrillMessage = String.format(
-                    beforeCommandMessage, generalName, commandName
-                ) + commandSubMessage;
-                String afterDrillMessage  = String.format(
-                    afterCommandMessage, generalName, commandName
-                ) + commandSubMessage;
+                dispatcher.updateSubscribers(beforeCmdEvent);
+                dispatcher.updateSubscribers(afterCmdEvent);
 
-                dispatcher.updateSubscribers(new BeforeCommandEvent(drillCmd));
-                dispatcher.updateSubscribers(new AfterCommandEvent(drillCmd));
-
+                String expectedBeforeMessage = prepareExpectedMessage(beforeCmdEvent);
+                String expectedAfterMessage  = prepareExpectedMessage(afterCmdEvent);
                 String log = out.toString();
-                assertTrue(log.contains(beforeDrillMessage));
-                assertTrue(log.contains(afterDrillMessage));
+                assertTrue(log.contains(expectedBeforeMessage));
+                assertTrue(log.contains(expectedAfterMessage));
             }           
         }
+
+        private String prepareExpectedMessage(Event event) {
+            String expectedMessage = "";
+
+            expectedMessage += messagePrefix;
+
+            if (event instanceof CommandEvent) {
+                expectedMessage += prepareExpectedMessageSubject((CommandEvent) event);
+
+            } else {
+                expectedMessage += prepareExpectedMessageSubject(event);
+
+            }
+
+            expectedMessage += messageSuffix;
+
+            return expectedMessage;
+        }
+
+        private String prepareExpectedMessageSubject(CommandEvent ce) {
+            String messageSubject;
+
+            String subjectTemplate = ce instanceof BeforeCommandEvent ?
+                                        beforeCommandSubject : afterCommandSubject;
+
+            Command command     = ce.getCommand();
+            String  commandName = ce.getCommandName();
+
+            messageSubject = String.format(subjectTemplate, generalName, commandName);
+
+            String messageDetails;
+            if (command instanceof RecruitSoldiersCommand) {
+                messageDetails = prepareCommandDetails((RecruitSoldiersCommand) command);
+                
+            } else if (command instanceof DrillSoldiersCommand) {
+                messageDetails = prepareCommandDetails((DrillSoldiersCommand) command);
+
+            } else {
+                messageDetails = "";
+
+            }
+            messageSubject += messageDetails;
+
+            return messageSubject;
+        }
+
+        private String prepareCommandDetails(RecruitSoldiersCommand cmd) {
+            String commandDetails;
+            int  recruitedQuantity = cmd.getQuantity();
+            Rank recruitedRank     = cmd.getRank();
+
+            commandDetails = String.format(
+                recruitSoldiersDetails, recruitedQuantity, recruitedRank
+            );
+
+            return commandDetails;
+        }
+
+        private String prepareCommandDetails(DrillSoldiersCommand cmd) {
+            String commandDetails;
+            int drilledQuantity = cmd.getQuantity();
+            int drillCost       = cmd.getCost();
+
+            commandDetails = String.format(
+                drillSoldiersDetails, drilledQuantity, drillCost
+            );
+
+            return commandDetails;
+        }
+
+        private String prepareExpectedMessageSubject(Event e) {
+            String eventName, messageSubject;
+
+            eventName = e.getClass().getSimpleName();
+            messageSubject = String.format(defaultEventSubject, eventName);
+
+            return messageSubject;
+        }
+
     }
 }
