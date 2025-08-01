@@ -45,7 +45,7 @@ public class SecretaryTest {
     
     @Nested
     @DisplayName("Should log event information message to system out")
-    class testUpdate {
+    class UpdateTest {
 
         private final String messagePrefix = "Secretary: ";
         private final String messageSuffix = "\n";
@@ -88,7 +88,7 @@ public class SecretaryTest {
        
         @Nested
         @DisplayName("Should log command execution messages on CommandEvent update")
-        class testCommandEvent {
+        class UpdateCommandEventTest {
 
             private final SoldierFactory soldierFactory = new SoldierFactory();
             private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
