@@ -18,16 +18,20 @@ public class DrillSoldiersCommandTest {
     private static final int    TEST_STARTING_GOLD = 40;
     private static final int    EXP_INCREASE       = DrillSoldiersCommand.EXP_INCREASE;
 
-    private final SoldierFactory  soldierFactory = new SoldierFactory();
-    private final EventDispatcher dispatcher     = EventDispatcher.getInstance();
-    private final CommandFactory  commandFactory = new CommandFactory(dispatcher, soldierFactory);
+    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
+
+    private final SoldierFactory soldierFactory = new SoldierFactory();
+    private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
+    private final GeneralFactory generalFactory = new GeneralFactory();
     
     private General general;
     private Soldier s1, s2, s3, s4;
 
     @BeforeEach
     void setUp() {
-        general   = new General(TEST_GENERAL_NAME, TEST_STARTING_GOLD);
+        general = generalFactory.createGeneral(
+            TEST_GENERAL_NAME, TEST_STARTING_GOLD
+        );
         Army army = general.getArmy();
 
         s1 = soldierFactory.createPrivate();

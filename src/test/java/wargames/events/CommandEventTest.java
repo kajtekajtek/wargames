@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*;
 import wargames.models.General;
 import wargames.commands.Command;
 import wargames.events.publisher.EventDispatcher;
+import wargames.factories.GeneralFactory;
 
 public class CommandEventTest {
 
@@ -20,9 +21,13 @@ public class CommandEventTest {
             public void execute() { }
         }
 
+        private final GeneralFactory generalFactory = new GeneralFactory();
+
         private final String  generalName = "Helm Hammerhand";
         private final int     generalGold = 64;
-        private final General general     = new General(generalName, generalGold);
+        private final General general     = generalFactory.createGeneral(
+            generalName, generalGold
+        );
 
         private final EventDispatcher dispatcher = EventDispatcher.getInstance();
 

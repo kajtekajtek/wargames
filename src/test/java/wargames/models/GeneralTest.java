@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
 import wargames.exceptions.InsufficientGoldException;
+import wargames.factories.GeneralFactory;
 
 class GeneralTest {
+
+    private static final GeneralFactory generalFactory = new GeneralFactory();
 
     private static final String TEST_GENERAL_NAME  = "Ferdinand Foch";
     private static final int    TEST_STARTING_GOLD = 100;
@@ -15,7 +18,9 @@ class GeneralTest {
 
     @BeforeEach
     void setUp() {
-        general = new General(TEST_GENERAL_NAME, TEST_STARTING_GOLD);
+        general = generalFactory.createGeneral(
+            TEST_GENERAL_NAME, TEST_STARTING_GOLD
+        );
     }
 
     @Test

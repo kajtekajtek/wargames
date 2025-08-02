@@ -21,6 +21,8 @@ public class SecretaryTest {
     private static final EventDispatcher dispatcher = EventDispatcher.getInstance();
     private static final ByteArrayOutputStream out  = new ByteArrayOutputStream();
 
+    private final GeneralFactory generalFactory = new GeneralFactory();
+
     @BeforeAll
     static void setUp() {
         dispatcher.removeAllSubscribers();
@@ -93,7 +95,7 @@ public class SecretaryTest {
 
             @BeforeEach
             void setUp() {
-                general = new General(generalName, generalGold);
+                general = generalFactory.createGeneral(generalName, generalGold);
             }
 
             @Test
@@ -148,7 +150,9 @@ public class SecretaryTest {
                 attackingArmy.add(soldierFactory.createPrivate());
                 attackingArmy.add(soldierFactory.createPrivate());
 
-                General attackedGeneral = new General("Duke of Wellington", generalGold);
+                General attackedGeneral = generalFactory.createGeneral(
+                    "Duke of Wellington", generalGold
+                );
                 Army    attackedArmy = attackedGeneral.getArmy();
                 for (int i = 0; i < attackedArmySize; i++) {
                     attackedArmy.add(soldierFactory.createPrivate());

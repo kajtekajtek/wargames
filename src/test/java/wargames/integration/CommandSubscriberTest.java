@@ -9,14 +9,19 @@ import java.util.*;
 import wargames.events.subscribers.Subscriber;
 import wargames.events.publisher.EventDispatcher;
 import wargames.events.*;
-import wargames.commands.Command;
-import wargames.models.General;
+import wargames.commands.*;
+import wargames.models.*;
+import wargames.factories.*;
 
 public class CommandSubscriberTest {
 
+    private final GeneralFactory generalFactory = new GeneralFactory();
+
     private final String  generalName = "Julius Caesar";
     private final int     generalGold = 0;
-    private final General general     = new General(generalName, generalGold);
+    private final General general     = generalFactory.createGeneral(
+        generalName, generalGold
+    );
 
     private final EventDispatcher dispatcher = EventDispatcher.getInstance();
 

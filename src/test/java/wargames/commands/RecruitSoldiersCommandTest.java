@@ -18,15 +18,17 @@ public class RecruitSoldiersCommandTest {
     private static final int    TEST_STARTING_GOLD = 200;
     private static final int    COST_PER_RANK      = RecruitSoldiersCommand.COST_PER_RANK;
 
-    private final SoldierFactory  soldierFactory = new SoldierFactory();
-    private final EventDispatcher dispatcher     = EventDispatcher.getInstance();
-    private final CommandFactory  commandFactory = new CommandFactory(dispatcher, soldierFactory);
+    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
+
+    private final SoldierFactory soldierFactory = new SoldierFactory();
+    private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
+    private final GeneralFactory generalFactory = new GeneralFactory();
 
     private General general;
 
     @BeforeEach
     void setUp() {
-        general = new General(TEST_GENERAL_NAME, TEST_STARTING_GOLD);
+        general = generalFactory.createGeneral(TEST_GENERAL_NAME, TEST_STARTING_GOLD);
     }
     
     @Test
