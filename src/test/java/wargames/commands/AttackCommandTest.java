@@ -13,13 +13,14 @@ import wargames.exceptions.InsufficientGoldException;
 
 public class AttackCommandTest {
 
-    private static final String ATTACKER_NAME  = "Agamemnon";
-    private static final String ATTACKED_NAME  = "Priam";
-    private static final int    STARTING_GOLD  = 100;
-    private static final int    TEST_ARMY_SIZE = 10;
-    private static final Rank   TEST_SOLDIERS_RANK = Rank.PRIVATE;
-
     private static final double GOLD_LOOT_PERCENTAGE   = AttackCommand.GOLD_LOOT_PERCENTAGE;
+
+    private static final String ATTACKER_NAME = "Agamemnon";
+    private static final String ATTACKED_NAME = "Priam";
+    private static final int    STARTING_GOLD = 100;
+
+    private static final int  TEST_ARMY_SIZE     = 10;
+    private static final Rank TEST_SOLDIERS_RANK = Rank.PRIVATE;
 
     private final SoldierFactory  soldierFactory = new SoldierFactory();
     private final EventDispatcher dispatcher     = EventDispatcher.getInstance();
@@ -33,8 +34,8 @@ public class AttackCommandTest {
         attacking = new General(ATTACKER_NAME, STARTING_GOLD);
         attacked  = new General(ATTACKED_NAME, STARTING_GOLD);
         
-        recruitTestArmy(attacking);
-        recruitTestArmy(attacked);
+        setUpTestArmy(attacking);
+        setUpTestArmy(attacked);
     }
     
     @ParameterizedTest(name = "{0} wins the battle")
@@ -42,31 +43,30 @@ public class AttackCommandTest {
         "attacker, attacked",
         "attacked, attacker"
     })
-    @DisplayName("Loser gives 10% of gold to the winner; losing army -> exp--, winning army -> exp++")
+    @DisplayName("Loser should give 10% of gold to the winner. 1 exp should be gained and lost in winner's and loser's armies respectively")
     void testGeneralWins(String winnerRole, String loserRole) {
         General winner = "attacker".equals(winnerRole) ? attacking : attacked;
         General loser  = "attacker".equals(loserRole)  ? attacking : attacked;
 
-        Army victoriousArmy = winner.getArmy();
-        Army defeatedArmy   = loser.getArmy();
-        victoriousArmy.add(soldierFactory.createSoldier(TEST_SOLDIERS_RANK));
+        Army winnerArmy = winner.getArmy();
+        Army loserArmy  = loser.getArmy();
+        winnerArmy.add(soldierFactory.createSoldier(TEST_SOLDIERS_RANK));
 
-        AttackCommand cmd = commandFactory.createAttack(winner, loser);
+        AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
-        int expectedVictoriousStrength = victoriousArmy.getSize()
+        int expectedVictoriousStrength = winnerArmy.getSize()
                                          * TEST_SOLDIERS_RANK.getValue()
                                          * 2;
         int expectedDefeatedStrength = 0;
 
         assertEquals(expectedVictoriousStrength,
-                     victoriousArmy.getTotalStrength());
+                     winnerArmy.getTotalStrength());
         assertEquals(expectedDefeatedStrength,
-                     defeatedArmy.getTotalStrength());
-        assertEquals((int) (STARTING_GOLD + (STARTING_GOLD * GOLD_LOOT_PERCENTAGE)),
-                     winner.getGold());
-        assertEquals((int) (STARTING_GOLD * (1 - GOLD_LOOT_PERCENTAGE)),
-                     loser.getGold());
+                     loserArmy.getTotalStrength());
+        assertAttackingAndAttacked(cmd);
+        assertWinnerEqualsTo(cmd, winner);
+        assertGoldTransfer(loser, winner);
     }
     
     @Test
@@ -75,10 +75,10 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
-        assertEquals(TEST_ARMY_SIZE - 1, attacking.getArmy().getSize());
-        assertEquals(TEST_ARMY_SIZE - 1, attacked.getArmy().getSize());
-        assertEquals(STARTING_GOLD, attacking.getGold());
-        assertEquals(STARTING_GOLD, attacked.getGold());
+        assertAttackingAndAttacked(cmd);
+        assertDraw(cmd);
+        assertBothArmiesSizeEqualsTo(TEST_ARMY_SIZE - 1);
+        assertGoldNotChanged();
     }
     
     @ParameterizedTest(name = "{0} with empty army throws IllegalArgumentException")
@@ -104,15 +104,17 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertThrows(IllegalArgumentException.class, cmd::execute);
 
-        assertEquals(STARTING_GOLD, attacking.getGold());
-        assertEquals(STARTING_GOLD, attacked.getGold());
+        assertAttackingAndAttacked(cmd);
+        assertGoldNotChanged();
     }
     
     @Test
     @DisplayName("IllegalArgumentException thrown on the general being the attacking and attacked at the same time")
     void testGeneralAttacksItself() {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacking);     
+
         assertThrows(IllegalArgumentException.class, cmd::execute);
+
         assertEquals(STARTING_GOLD, attacking.getGold());
         assertEquals(TEST_ARMY_SIZE, attacking.getArmy().getSize());
     }
@@ -125,10 +127,10 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertThrows(InsufficientGoldException.class, cmd::execute);
 
+        assertAttackingAndAttacked(cmd);
         assertEquals(0, attacking.getGold());
         assertEquals(STARTING_GOLD, attacked.getGold());
-        assertEquals(TEST_ARMY_SIZE, attacking.getArmy().getSize());
-        assertEquals(TEST_ARMY_SIZE, attacked.getArmy().getSize());
+        assertBothArmiesSizeEqualsTo(TEST_ARMY_SIZE);
     }
     
     @ParameterizedTest(name = "attacked has no gold and the {0} wins")
@@ -140,29 +142,29 @@ public class AttackCommandTest {
         General winner = "attacker".equals(winnerRole) ? attacking : attacked;
         General loser  = "attacked".equals(winnerRole) ? attacking : attacked;
 
-        Army victoriousArmy = winner.getArmy();
-        Army defeatedArmy   = loser.getArmy();
-        victoriousArmy.add(soldierFactory.createSoldier(TEST_SOLDIERS_RANK));
+        Army winnerArmy = winner.getArmy();
+        Army loserArmy  = loser.getArmy();
+        winnerArmy.add(soldierFactory.createSoldier(TEST_SOLDIERS_RANK));
 
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
-        int expectedVictoriousStrength = victoriousArmy.getSize()
+        int expectedVictoriousStrength = winnerArmy.getSize()
                                          * TEST_SOLDIERS_RANK.getValue()
                                          * 2;
         int expectedDefeatedStrength = 0;
 
-        assertEquals(expectedVictoriousStrength, victoriousArmy.getTotalStrength());
-        assertEquals(expectedDefeatedStrength, defeatedArmy.getTotalStrength());
+        assertAttackingAndAttacked(cmd);
+        assertWinnerEqualsTo(cmd, winner);
+        assertEquals(expectedVictoriousStrength, winnerArmy.getTotalStrength());
+        assertEquals(expectedDefeatedStrength, loserArmy.getTotalStrength());
 
         if (winnerRole == "attacker") {
             assertEquals(STARTING_GOLD, winner.getGold());
             assertEquals(0, loser.getGold());
+
         } else if (winnerRole == "attacked") {
-            assertEquals((int) (STARTING_GOLD + (STARTING_GOLD * GOLD_LOOT_PERCENTAGE)), 
-                         winner.getGold());
-            assertEquals((int) (STARTING_GOLD * (1 - GOLD_LOOT_PERCENTAGE)),
-                         loser.getGold());
+            assertGoldTransfer(loser, winner);    
         }
     }
 
@@ -181,7 +183,7 @@ public class AttackCommandTest {
     }
 
     @Test
-    @DisplayName("Attack when each side has one soldier leads to draw")
+    @DisplayName("Should draw on to armies with 1 soldier")
     void testSingleSoldierDraw() {
         attacking = new General(ATTACKER_NAME, STARTING_GOLD);
         attacked  = new General(ATTACKED_NAME, STARTING_GOLD);
@@ -193,27 +195,58 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
-        assertEquals(0, attacking.getArmy().getSize());
-        assertEquals(0, attacked.getArmy().getSize());
-        assertEquals(STARTING_GOLD, attacking.getGold());
-        assertEquals(STARTING_GOLD, attacked.getGold());
+        assertAttackingAndAttacked(cmd);
+        assertDraw(cmd);
+        assertBothArmiesSizeEqualsTo(0);
+        assertGoldNotChanged();
     }
 
     @Test
-    @DisplayName("Multiple consecutive draws decrease armies cumulatively")
+    @DisplayName("Should decrease armies cumulatively on multiple consecutive draws")
     void testConsecutiveDraws() {
         AttackCommand cmd1 = commandFactory.createAttack(attacking, attacked);
         AttackCommand cmd2 = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd1::execute);
         assertDoesNotThrow(cmd2::execute);
 
-        assertEquals(TEST_ARMY_SIZE - 2, attacking.getArmy().getSize());
-        assertEquals(TEST_ARMY_SIZE - 2, attacked.getArmy().getSize());
+        assertDraw(cmd1);
+        assertDraw(cmd2);
+        assertBothArmiesSizeEqualsTo(TEST_ARMY_SIZE - 2);
+        assertGoldNotChanged();
+    }
+
+    private void assertBothArmiesSizeEqualsTo(int size) {
+        assertEquals(size, attacking.getArmy().getSize());
+        assertEquals(size, attacked.getArmy().getSize());
+    }
+
+    private void assertGoldTransfer(General loser, General winner) {
+        assertEquals((int) (STARTING_GOLD * (1 - GOLD_LOOT_PERCENTAGE)),
+                     loser.getGold());
+        assertEquals((int) (STARTING_GOLD + (STARTING_GOLD * GOLD_LOOT_PERCENTAGE)), 
+                     winner.getGold());
+    }
+
+    private void assertGoldNotChanged() {
         assertEquals(STARTING_GOLD, attacking.getGold());
         assertEquals(STARTING_GOLD, attacked.getGold());
     }
+
+    private void assertAttackingAndAttacked(AttackCommand cmd) {
+        assertSame(attacking, cmd.getAttacking());
+        assertSame(attacked, cmd.getAttacked());
+    }
+
+    private void assertWinnerEqualsTo(AttackCommand cmd, General winner) {
+        assertTrue(cmd.isAttackOver());
+        assertSame(winner, cmd.getWinner());
+    }
+
+    private void assertDraw(AttackCommand cmd) {
+        assertTrue(cmd.isDraw());
+    }
     
-    void recruitTestArmy(General general) {
+    private void setUpTestArmy(General general) {
         Army army = general.getArmy();
         for (int i = 0; i < TEST_ARMY_SIZE; i++) {
             Soldier s = soldierFactory.createSoldier(TEST_SOLDIERS_RANK);

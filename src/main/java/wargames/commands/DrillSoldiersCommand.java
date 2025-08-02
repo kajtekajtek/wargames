@@ -20,6 +20,14 @@ public class DrillSoldiersCommand extends Command {
         this.soldiersToDrill = soldiers;
     }
     
+    public int getQuantity() {
+        return (int) soldiersToDrill.stream().count();
+    }
+
+    public int getCost() {
+        return calculateDrillCost(soldiersToDrill);
+    }
+    
     @Override
     public void execute() throws InsufficientGoldException {
         if (this.soldiersToDrill == null || this.general == null) {
