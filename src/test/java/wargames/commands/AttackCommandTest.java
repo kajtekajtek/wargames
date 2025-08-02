@@ -52,7 +52,7 @@ public class AttackCommandTest {
         Army loserArmy  = loser.getArmy();
         winnerArmy.add(soldierFactory.createSoldier(TEST_SOLDIERS_RANK));
 
-        AttackCommand cmd = commandFactory.createAttack(winner, loser);
+        AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
         int expectedVictoriousStrength = winnerArmy.getSize()

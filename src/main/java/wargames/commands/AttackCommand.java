@@ -13,14 +13,26 @@ public class AttackCommand extends Command {
     private final General attacking;
     private final General attacked;
 
+    private General winner;
+    private Boolean isOver;
+
     public AttackCommand(General attacking, 
                          General attacked, 
                          EventDispatcher dispatcher) {
         super(attacking, dispatcher);
 
+        this.isOver = false;
+
         this.attacking = attacking;
         this.attacked  = attacked;
     }
+
+    public General getAttacking() { return this.attacking; }
+    public General getAttacked()  { return this.attacked; }
+    public General getWinner()    { return this.winner; }
+
+    public Boolean isAttackOver() { return this.isOver; }
+    public Boolean isDraw()       { return this.isAttackOver() && this.getWinner() == null; }
 
     @Override
     public void execute() throws Exception {
@@ -46,6 +58,8 @@ public class AttackCommand extends Command {
         } else {
             handleWinnerAndLoser(this.attacked, this.attacking);
         }
+
+        this.isOver = true;
     }
 
     private void throwIfEitherArmyIsEmpty() throws IllegalArgumentException {
@@ -78,6 +92,7 @@ public class AttackCommand extends Command {
     private void handleWinnerAndLoser(General winner, General loser) throws InsufficientGoldException {
         transferLoot(winner, loser);
         handleExpGainAndLoss(winner, loser);
+        this.winner = winner;
     }
 
     private void transferLoot(General winner, General loser) throws InsufficientGoldException {
