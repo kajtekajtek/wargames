@@ -100,14 +100,9 @@ public class SecretaryTest {
             @DisplayName("Should log only command name before and after TestCommand")
             void testCommand() {
                 TestCommand        testCommand    = new TestCommand(general, dispatcher);
-                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(testCommand);
-                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(testCommand);
-
-                dispatcher.updateSubscribers(beforeCmdEvent);
-                dispatcher.updateSubscribers(afterCmdEvent);
-
-                assertExpectedMessage(beforeCmdEvent);
-                assertExpectedMessage(afterCmdEvent);
+                
+                updateAndAssert(new BeforeCommandEvent(testCommand));
+                updateAndAssert(new AfterCommandEvent(testCommand));
             }
             
             @Test
@@ -119,14 +114,8 @@ public class SecretaryTest {
                     general, quantity, rank
                 );
 
-                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(rsCommand);
-                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(rsCommand);
-
-                dispatcher.updateSubscribers(beforeCmdEvent);
-                dispatcher.updateSubscribers(afterCmdEvent);
-
-                assertExpectedMessage(beforeCmdEvent);
-                assertExpectedMessage(afterCmdEvent);
+                updateAndAssert(new BeforeCommandEvent(rsCommand));
+                updateAndAssert(new AfterCommandEvent(rsCommand));
             }
             
             @Test
@@ -147,14 +136,8 @@ public class SecretaryTest {
                     general, soldiersToDrill
                 );
 
-                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(dCommand);
-                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(dCommand);
-
-                dispatcher.updateSubscribers(beforeCmdEvent);
-                dispatcher.updateSubscribers(afterCmdEvent);
-
-                assertExpectedMessage(beforeCmdEvent);
-                assertExpectedMessage(afterCmdEvent);
+                updateAndAssert(new BeforeCommandEvent(dCommand));
+                updateAndAssert(new AfterCommandEvent(dCommand));
             }
 
             @ParameterizedTest(name = "Logging AttackCommand details with attacked army size = {0}")
@@ -175,16 +158,17 @@ public class SecretaryTest {
                     general, attackedGeneral
                 );
 
-                BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(aCommand);
-                dispatcher.updateSubscribers(beforeCmdEvent);
-                assertExpectedMessage(beforeCmdEvent);
+                updateAndAssert(new BeforeCommandEvent(aCommand));
 
                 assertDoesNotThrow(aCommand::execute);
 
-                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(aCommand);
-                dispatcher.updateSubscribers(afterCmdEvent);
-                assertExpectedMessage(afterCmdEvent);
+                updateAndAssert(new AfterCommandEvent(aCommand));
             }
+        }
+
+        private void updateAndAssert(CommandEvent e) {
+            dispatcher.updateSubscribers(e);
+            assertExpectedMessage(e);
         }
 
         private void assertExpectedMessage(Event e) {
