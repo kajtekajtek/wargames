@@ -22,7 +22,7 @@ public class SecretaryTest {
     private static final ByteArrayOutputStream out  = new ByteArrayOutputStream();
 
     @BeforeAll
-    private static void setUp() {
+    static void setUp() {
         dispatcher.removeAllSubscribers();
         dispatcher.addSubscriber(new Secretary());
 
@@ -30,7 +30,7 @@ public class SecretaryTest {
     }
 
     @AfterAll
-    private static void tearDown() {
+    static void tearDown() {
         dispatcher.removeAllSubscribers();
 
         System.setOut(System.out);
