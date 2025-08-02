@@ -16,17 +16,9 @@ public class General {
         this.gold = gold;
     }
 
-    public Army getArmy() {
-        return this.army;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public int getGold() {
-        return this.gold;
-    }
+    public Army   getArmy() { return this.army; }
+    public String getName() { return this.name; }
+    public int    getGold() { return this.gold; }
     
     public void addGold(int goldToAdd) {
         if (goldToAdd < 0) {
