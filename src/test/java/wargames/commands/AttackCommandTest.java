@@ -64,6 +64,8 @@ public class AttackCommandTest {
                      winnerArmy.getTotalStrength());
         assertEquals(expectedDefeatedStrength,
                      loserArmy.getTotalStrength());
+        assertAttackingAndAttacked(cmd);
+        assertWinnerEqualsTo(cmd, winner);
         assertGoldTransfer(loser, winner);
     }
     
@@ -73,6 +75,8 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
+        assertAttackingAndAttacked(cmd);
+        assertDraw(cmd);
         assertBothArmiesSizeEqualsTo(TEST_ARMY_SIZE - 1);
         assertGoldNotChanged();
     }
@@ -100,6 +104,7 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertThrows(IllegalArgumentException.class, cmd::execute);
 
+        assertAttackingAndAttacked(cmd);
         assertGoldNotChanged();
     }
     
@@ -122,6 +127,7 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertThrows(InsufficientGoldException.class, cmd::execute);
 
+        assertAttackingAndAttacked(cmd);
         assertEquals(0, attacking.getGold());
         assertEquals(STARTING_GOLD, attacked.getGold());
         assertBothArmiesSizeEqualsTo(TEST_ARMY_SIZE);
@@ -148,6 +154,8 @@ public class AttackCommandTest {
                                          * 2;
         int expectedDefeatedStrength = 0;
 
+        assertAttackingAndAttacked(cmd);
+        assertWinnerEqualsTo(cmd, winner);
         assertEquals(expectedVictoriousStrength, winnerArmy.getTotalStrength());
         assertEquals(expectedDefeatedStrength, loserArmy.getTotalStrength());
 
@@ -187,6 +195,8 @@ public class AttackCommandTest {
         AttackCommand cmd = commandFactory.createAttack(attacking, attacked);
         assertDoesNotThrow(cmd::execute);
 
+        assertAttackingAndAttacked(cmd);
+        assertDraw(cmd);
         assertBothArmiesSizeEqualsTo(0);
         assertGoldNotChanged();
     }
@@ -199,6 +209,8 @@ public class AttackCommandTest {
         assertDoesNotThrow(cmd1::execute);
         assertDoesNotThrow(cmd2::execute);
 
+        assertDraw(cmd1);
+        assertDraw(cmd2);
         assertBothArmiesSizeEqualsTo(TEST_ARMY_SIZE - 2);
         assertGoldNotChanged();
     }
@@ -218,6 +230,20 @@ public class AttackCommandTest {
     private void assertGoldNotChanged() {
         assertEquals(STARTING_GOLD, attacking.getGold());
         assertEquals(STARTING_GOLD, attacked.getGold());
+    }
+
+    private void assertAttackingAndAttacked(AttackCommand cmd) {
+        assertSame(attacking, cmd.getAttacking());
+        assertSame(attacked, cmd.getAttacked());
+    }
+
+    private void assertWinnerEqualsTo(AttackCommand cmd, General winner) {
+        assertTrue(cmd.isAttackOver());
+        assertSame(winner, cmd.getWinner());
+    }
+
+    private void assertDraw(AttackCommand cmd) {
+        assertTrue(cmd.isDraw());
     }
     
     private void setUpTestArmy(General general) {
