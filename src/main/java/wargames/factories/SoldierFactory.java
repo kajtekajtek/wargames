@@ -8,6 +8,10 @@ public class SoldierFactory {
         return Soldier.withRank(rank);
     }
 
+    public Soldier createSoldier(Rank rank, int exp) {
+        return Soldier.withRankAndExp(rank, exp);
+    }
+
     public Soldier createPrivate() {
         return Soldier.withRank(Rank.PRIVATE);
     }
