@@ -158,10 +158,11 @@ public class SecretaryTest {
             }
 
             @ParameterizedTest(name = "Logging AttackCommand details with attacked army size = {0}")
-            @ValueSource(ints = {0, 1, 2})
+            @ValueSource(ints = {1, 2, 3})
             @DisplayName("Should log attacking and attacked general's name and battle outcome")
             void testAttackCommand(int attackedArmySize) {
                 Army attackingArmy = general.getArmy();
+                attackingArmy.add(soldierFactory.createPrivate());
                 attackingArmy.add(soldierFactory.createPrivate());
 
                 General attackedGeneral = new General("Duke of Wellington", generalGold);
@@ -175,12 +176,13 @@ public class SecretaryTest {
                 );
 
                 BeforeCommandEvent beforeCmdEvent = new BeforeCommandEvent(aCommand);
-                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(aCommand);
-
                 dispatcher.updateSubscribers(beforeCmdEvent);
-                dispatcher.updateSubscribers(afterCmdEvent);
-
                 assertExpectedMessage(beforeCmdEvent);
+
+                assertDoesNotThrow(aCommand::execute);
+
+                AfterCommandEvent  afterCmdEvent  = new AfterCommandEvent(aCommand);
+                dispatcher.updateSubscribers(afterCmdEvent);
                 assertExpectedMessage(afterCmdEvent);
             }
         }

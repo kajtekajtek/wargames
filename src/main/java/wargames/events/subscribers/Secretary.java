@@ -9,12 +9,16 @@ public class Secretary implements Subscriber {
     private final String messagePrefix = "Secretary: ";
     private final String messageSuffix = "\n";
 
-    private final String beforeCommandSubject = "%s is about to execute %s";
-    private final String afterCommandSubject  = "%s executed %s";
-    private final String defaultEventSubject  = "%s event occured";
+    private final String eventSubjectTemplate     = "%s event occured";
+    private final String beforeCmdSubjectTemplate = "%s is about to execute %s";
+    private final String afterCmdSubjectTemplate  = "%s executed %s";
 
-    private final String recruitSoldiersDetails = ": %d soldiers of rank %s";
-    private final String drillSoldiersDetails   = ": %d soldiers for %d gold";
+    private final String recruitmentDetailsTemplate = ": %d soldiers of rank %s";
+    private final String drillDetailsTemplate       = ": %d soldiers for %d gold";
+    private final String preAttackDetailsTemplate   = ": attacking %s";
+    private final String wonAttackDetailsTemplate   = ": won with %s";
+    private final String lostAttackDetailsTemplate  = ": lost with %s";
+    private final String drewAttackDetailsTemplate  = ": drew with %s";
 
     @Override
     public void update(Event event) {
@@ -58,7 +62,7 @@ public class Secretary implements Subscriber {
 
         eventSubject = String.format(
                 cmdEv instanceof BeforeCommandEvent ? 
-                beforeCommandSubject : afterCommandSubject,
+                beforeCmdSubjectTemplate : afterCmdSubjectTemplate,
                 cmdEv.getGeneralName(), 
                 cmdEv.getCommandName()
             );
@@ -70,7 +74,7 @@ public class Secretary implements Subscriber {
         String eventSubject;
 
         eventSubject = String.format(
-                defaultEventSubject, 
+                eventSubjectTemplate, 
                 ev.getClass().getSimpleName()
             );
 
@@ -96,6 +100,11 @@ public class Secretary implements Subscriber {
                 (DrillSoldiersCommand) command
             );
 
+        } else if (command instanceof AttackCommand) {
+            messageDetails = prepareCommandDetails(
+                (AttackCommand) command
+            );
+
         } else {
             messageDetails = "";
         }
@@ -109,7 +118,7 @@ public class Secretary implements Subscriber {
         Rank recruitedRank     = cmd.getRank();
 
         commandDetails = String.format(
-            recruitSoldiersDetails, recruitedQuantity, recruitedRank
+            recruitmentDetailsTemplate, recruitedQuantity, recruitedRank
         );
 
         return commandDetails;
@@ -121,7 +130,33 @@ public class Secretary implements Subscriber {
         int drillCost       = cmd.getCost();
 
         commandDetails = String.format(
-            drillSoldiersDetails, drilledQuantity, drillCost
+            drillDetailsTemplate, drilledQuantity, drillCost
+        );
+
+        return commandDetails;
+    }
+
+    private String prepareCommandDetails(AttackCommand cmd) {
+        String commandDetails, detailsTemplate;
+        String attackedName = cmd.getAttacked().getName();
+        
+        if (!cmd.isAttackOver()) {
+            detailsTemplate = preAttackDetailsTemplate;    
+
+        } else {
+            if (cmd.isDraw()) {
+                detailsTemplate = drewAttackDetailsTemplate;
+
+            } else {
+                String winnerName = cmd.getWinner().getName();
+                detailsTemplate = winnerName == attackedName
+                                  ? lostAttackDetailsTemplate
+                                  : wonAttackDetailsTemplate;
+                }
+        }
+
+        commandDetails = String.format(
+            detailsTemplate, attackedName
         );
 
         return commandDetails;
