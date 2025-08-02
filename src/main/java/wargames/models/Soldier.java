@@ -13,6 +13,10 @@ public class Soldier
         return new Soldier(rank, 1, true);
     }
 
+    public static Soldier withRankAndExp(Rank rank, int exp) {
+        return new Soldier(rank, exp, true);
+    }
+
     private Soldier(Rank rank, int exp, boolean alive) {
         this.rank  = rank;
         this.exp   = exp;
