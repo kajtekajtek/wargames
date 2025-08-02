@@ -23,6 +23,7 @@ public class JSONStorageTest {
     private final GeneralFactory generalFactory = new GeneralFactory();
 
     private final ObjectMapper mapper = new ObjectMapper();
+
     private JSONStorage storage;
 
     @BeforeEach
@@ -37,7 +38,7 @@ public class JSONStorageTest {
     }
     
     @Test
-    @DisplayName("Should create a JSON ffile with correct content")
+    @DisplayName("Should create a JSON file with correct content")
     void testSave() throws Exception {
         int    armySize = 3;
         String filename = generalToSaveName + fileExtension;
@@ -93,4 +94,83 @@ public class JSONStorageTest {
         assertEquals(s.getExp(), jn.get("exp").asInt());
         assertEquals(s.isAlive(), jn.get("alive").asBoolean());
     }
+
+    @Test
+    @DisplayName("Should correctly load General state from the JSON file")
+    void testLoad() throws Exception {
+        General generalToLoad = generalFactory.createGeneral(
+            generalToLoadName, 0, storage
+        );
+
+        String jsonString = prepareJSONString(generalToLoad);
+        String filename = generalToLoadName + fileExtension;
+
+        File in = new File(filename);
+        Files.writeString(in.toPath(), jsonString);
+
+        General generalLoaded = generalFactory.createGeneral("", 0, storage);
+        generalLoaded.load();
+
+        assertEqualGenerals(generalToLoad, generalLoaded);
+    }
+
+    private String prepareJSONString(General general) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{");
+
+        sb.append("\"name\":\"")
+        .append(general.getName())
+        .append("\",");
+
+        sb.append("\"gold\":")
+        .append(general.getGold())
+        .append(",");
+
+        sb.append("\"soldiers\":[");
+        Army army = general.getArmy();
+        for (int i = 0; i < army.getSize(); i++) {
+            Soldier s = army.getSoldiers().get(i);
+            sb.append("{")
+            .append("\"rank\":\"").append(s.getRank().name()).append("\",")
+            .append("\"exp\":").append(s.getExp()).append(",")
+            .append("\"alive\":").append(s.isAlive())
+            .append("}");
+            if (i < army.getSize() - 1) {
+                sb.append(",");
+            }
+        }
+        sb.append("]");
+
+        sb.append("}");
+
+        return sb.toString();
+    }
+
+    private void assertEqualGenerals(General expected, General actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getGold(), actual.getGold());
+
+        Army expectedArmy = expected.getArmy();
+        Army actualArmy   = actual.getArmy(); 
+        assertEqualArmies(expectedArmy, actualArmy); 
+    }
+
+    private void assertEqualArmies(Army expected, Army actual) {
+        assertEquals(expected.getSize(), actual.getSize());
+
+        for (int i = 0; i < expected.getSize(); i++) {
+            Soldier expectedSoldier = expected.getSoldiers().get(i);
+            Soldier actualSoldier   = actual.getSoldiers().get(i);
+            assertEqualSoldiers(expectedSoldier, actualSoldier);
+        }
+    }
+
+    private void assertEqualSoldiers(Soldier expected, Soldier actual) {
+        assertEquals(expected.getExp(),  actual.getExp());
+        assertEquals(expected.getRank(), actual.getRank());
+        assertEquals(expected.isAlive(), actual.isAlive());
+    }
+
+
 }
