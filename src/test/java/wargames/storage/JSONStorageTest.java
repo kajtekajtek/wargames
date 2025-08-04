@@ -1,6 +1,8 @@
 package wargames.storage;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static wargames.testutils.JSONTestUtils.*;
+import static wargames.testutils.ModelsTestUtils.*;
 
 import org.junit.jupiter.api.*;
 
@@ -60,6 +62,27 @@ public class JSONStorageTest {
         assertJsonFileContents(generalToSave, out);
     }
 
+    @Test
+    @DisplayName("Should correctly load General state from the JSON file")
+    void testLoad() throws Exception {
+        General generalToLoad = generalFactory.createGeneral(
+            GENERAL_TO_LOAD_NAME, 0, storage
+        );
+        populateGeneralArmy(generalToLoad);  
+
+        JsonNode root     = serializeGeneralToJsonNode(generalToLoad);
+        String   filename = GENERAL_TO_LOAD_NAME + FILE_EXTENSION;
+        File     in       = new File(filename);
+        mapper.writeValue(in, root);
+
+        General generalLoaded = generalFactory.createGeneral(
+            GENERAL_TO_LOAD_NAME, 0, storage
+        );
+        generalLoaded.load();
+
+        assertEqualGenerals(generalToLoad, generalLoaded);
+    }
+
     private void populateGeneralArmy(General general) {
         Army army = general.getArmy();
         for (int i = 1; i <= GENERAL_ARMY_SIZE; i++) {
@@ -84,73 +107,10 @@ public class JSONStorageTest {
         }
     }
 
-    private void assertJsonNodeContents(General g, JsonNode jn) {
-        assertEquals(g.getName(), jn.get("name").asText());
-        assertEquals(g.getGold(), jn.get("gold").asInt());
-    }
-
-    private void assertJsonNodeContents(Army a, JsonNode jn) {
-        assertTrue(jn.isArray());
-        assertEquals(a.getSize(), jn.size());
-    }
-
-    private void assertJsonNodeContents(Soldier s, JsonNode jn) {
-        assertEquals(s.getRank().name(), jn.get("rank").asText());
-        assertEquals(s.getExp(), jn.get("exp").asInt());
-        assertEquals(s.isAlive(), jn.get("alive").asBoolean());
-    }
-
-    @Test
-    @DisplayName("Should correctly load General state from the JSON file")
-    void testLoad() throws Exception {
-        General generalToLoad = generalFactory.createGeneral(
-            GENERAL_TO_LOAD_NAME, 0, storage
-        );
-        populateGeneralArmy(generalToLoad);  
-
-        JsonNode root     = serializeGeneralToJsonNode(generalToLoad);
-        String   filename = GENERAL_TO_LOAD_NAME + FILE_EXTENSION;
-        File     in       = new File(filename);
-        mapper.writeValue(in, root);
-
-        General generalLoaded = generalFactory.createGeneral(
-            GENERAL_TO_LOAD_NAME, 0, storage
-        );
-        generalLoaded.load();
-
-        assertEqualGenerals(generalToLoad, generalLoaded);
-    }
-
     private JsonNode serializeGeneralToJsonNode(General general) {
         return mapper.createObjectNode()
             .put("name", general.getName())
             .put("gold", general.getGold())
             .set("army", mapper.valueToTree(general.getArmy()));
     }
-
-    private void assertEqualGenerals(General expected, General actual) {
-        assertEquals(expected.getName(), actual.getName());
-        assertEquals(expected.getGold(), actual.getGold());
-
-        Army expectedArmy = expected.getArmy();
-        Army actualArmy   = actual.getArmy(); 
-        assertEqualArmies(expectedArmy, actualArmy); 
-    }
-
-    private void assertEqualArmies(Army expected, Army actual) {
-        assertEquals(expected.getSize(), actual.getSize());
-
-        for (int i = 0; i < expected.getSize(); i++) {
-            Soldier expectedSoldier = expected.getSoldiers().get(i);
-            Soldier actualSoldier   = actual.getSoldiers().get(i);
-            assertEqualSoldiers(expectedSoldier, actualSoldier);
-        }
-    }
-
-    private void assertEqualSoldiers(Soldier expected, Soldier actual) {
-        assertEquals(expected.getExp(),  actual.getExp());
-        assertEquals(expected.getRank(), actual.getRank());
-        assertEquals(expected.isAlive(), actual.isAlive());
-    }
-
 }
