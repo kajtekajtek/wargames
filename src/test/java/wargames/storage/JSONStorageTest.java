@@ -15,9 +15,10 @@ import wargames.models.*;
 
 public class JSONStorageTest {
 
-    private final String fileExtension     = ".json";
-    private final String generalToSaveName = "Saul";
-    private final String generalToLoadName = "David";
+    private final static String FILE_EXTENSION       = ".json";
+    private final static String GENERAL_TO_SAVE_NAME = "Saul";
+    private final static String GENERAL_TO_LOAD_NAME = "David";
+    private final static int    GENERAL_ARMY_SIZE    = 4;
 
     private final SoldierFactory soldierFactory = new SoldierFactory();
     private final GeneralFactory generalFactory = new GeneralFactory();
@@ -33,29 +34,24 @@ public class JSONStorageTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        Files.deleteIfExists(new File(generalToSaveName + fileExtension).toPath());
-        Files.deleteIfExists(new File(generalToLoadName + fileExtension).toPath());
+        Files.deleteIfExists(new File(
+            GENERAL_TO_SAVE_NAME + FILE_EXTENSION
+        ).toPath());
+        Files.deleteIfExists(new File(
+            GENERAL_TO_LOAD_NAME + FILE_EXTENSION)
+        .toPath());
     }
     
     @Test
     @DisplayName("Should create a JSON file with correct content")
     void testSave() throws Exception {
-        int    armySize = 3;
-        String filename = generalToSaveName + fileExtension;
-
         General generalToSave = generalFactory.createGeneral(
-            generalToLoadName, 0, storage
+            GENERAL_TO_SAVE_NAME, 0, storage
         );
+        populateGeneralArmy(generalToSave);
 
-        Army army = generalToSave.getArmy();
-        for (int i = 1; i <= armySize; i++) {
-            army.add(
-                soldierFactory.createSoldier(Rank.fromValue(i), i)
-            );
-        }
-
-        File out = new File(filename);
-
+        String filename = GENERAL_TO_SAVE_NAME + FILE_EXTENSION;
+        File   out      = new File(filename);
         if (out.exists()) assertTrue(out.delete());
 
         generalToSave.save();
@@ -64,17 +60,26 @@ public class JSONStorageTest {
         assertJsonFileContents(generalToSave, out);
     }
 
-    private void assertJsonFileContents(General general, File f) throws Exception {
+    private void populateGeneralArmy(General general) {
+        Army army = general.getArmy();
+        for (int i = 1; i <= GENERAL_ARMY_SIZE; i++) {
+            army.add(
+                soldierFactory.createSoldier(Rank.fromValue(i), i)
+            );
+        }
+    }
+
+    private void assertJsonFileContents(General general, File file) throws Exception {
         Army     army     = general.getArmy();
-        JsonNode rootNode = mapper.readTree(f);
+        JsonNode rootNode = mapper.readTree(file);
 
         assertJsonNodeContents(general, rootNode);
 
-        JsonNode soldiersNode = rootNode.get("soldiers");
-        assertJsonNodeContents(army, soldiersNode);
+        JsonNode armyNode = rootNode.get("army");
+        assertJsonNodeContents(army, armyNode);
 
         for (int i = 0; i < army.getSize(); i++) {
-            JsonNode soldierNode = soldiersNode.get(i);
+            JsonNode soldierNode = armyNode.get(i);
             assertJsonNodeContents(army.getSoldiers().get(i), soldierNode);
         }
     }
@@ -84,9 +89,9 @@ public class JSONStorageTest {
         assertEquals(g.getGold(), jn.get("gold").asInt());
     }
 
-    private void assertJsonNodeContents(Army soldiers, JsonNode jn) {
+    private void assertJsonNodeContents(Army a, JsonNode jn) {
         assertTrue(jn.isArray());
-        assertEquals(soldiers.getSize(), jn.size());
+        assertEquals(a.getSize(), jn.size());
     }
 
     private void assertJsonNodeContents(Soldier s, JsonNode jn) {
@@ -99,52 +104,28 @@ public class JSONStorageTest {
     @DisplayName("Should correctly load General state from the JSON file")
     void testLoad() throws Exception {
         General generalToLoad = generalFactory.createGeneral(
-            generalToLoadName, 0, storage
+            GENERAL_TO_LOAD_NAME, 0, storage
         );
+        populateGeneralArmy(generalToLoad);  
 
-        String jsonString = prepareJSONString(generalToLoad);
-        String filename = generalToLoadName + fileExtension;
+        JsonNode root     = serializeGeneralToJsonNode(generalToLoad);
+        String   filename = GENERAL_TO_LOAD_NAME + FILE_EXTENSION;
+        File     in       = new File(filename);
+        mapper.writeValue(in, root);
 
-        File in = new File(filename);
-        Files.writeString(in.toPath(), jsonString);
-
-        General generalLoaded = generalFactory.createGeneral("", 0, storage);
+        General generalLoaded = generalFactory.createGeneral(
+            GENERAL_TO_LOAD_NAME, 0, storage
+        );
         generalLoaded.load();
 
         assertEqualGenerals(generalToLoad, generalLoaded);
     }
 
-    private String prepareJSONString(General general) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{");
-
-        sb.append("\"name\":\"")
-        .append(general.getName())
-        .append("\",");
-
-        sb.append("\"gold\":")
-        .append(general.getGold())
-        .append(",");
-
-        sb.append("\"soldiers\":[");
-        Army army = general.getArmy();
-        for (int i = 0; i < army.getSize(); i++) {
-            Soldier s = army.getSoldiers().get(i);
-            sb.append("{")
-            .append("\"rank\":\"").append(s.getRank().name()).append("\",")
-            .append("\"exp\":").append(s.getExp()).append(",")
-            .append("\"alive\":").append(s.isAlive())
-            .append("}");
-            if (i < army.getSize() - 1) {
-                sb.append(",");
-            }
-        }
-        sb.append("]");
-
-        sb.append("}");
-
-        return sb.toString();
+    private JsonNode serializeGeneralToJsonNode(General general) {
+        return mapper.createObjectNode()
+            .put("name", general.getName())
+            .put("gold", general.getGold())
+            .set("army", mapper.valueToTree(general.getArmy()));
     }
 
     private void assertEqualGenerals(General expected, General actual) {
@@ -171,6 +152,5 @@ public class JSONStorageTest {
         assertEquals(expected.getRank(), actual.getRank());
         assertEquals(expected.isAlive(), actual.isAlive());
     }
-
 
 }
