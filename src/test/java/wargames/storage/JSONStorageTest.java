@@ -5,9 +5,11 @@ import static wargames.testutils.JSONTestUtils.*;
 import static wargames.testutils.ModelsTestUtils.*;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,32 +31,21 @@ public class JSONStorageTest {
 
     private JSONStorage storage;
 
-    @BeforeEach
-    void setUp() {
-        storage = new JSONStorage();
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        Files.deleteIfExists(new File(
-            GENERAL_TO_SAVE_NAME + FILE_EXTENSION
-        ).toPath());
-        Files.deleteIfExists(new File(
-            GENERAL_TO_LOAD_NAME + FILE_EXTENSION)
-        .toPath());
-    }
-    
     @Test
     @DisplayName("Should create a JSON file with correct content")
-    void testSave() throws Exception {
+    void testSave(@TempDir Path tempDir) throws Exception {
+        storage = new JSONStorage();
+        storage.setDirectory(tempDir.toString());
+
         General generalToSave = generalFactory.createGeneral(
             GENERAL_TO_SAVE_NAME, 0, storage
         );
         populateGeneralArmy(generalToSave);
 
-        String filename = GENERAL_TO_SAVE_NAME + FILE_EXTENSION;
-        File   out      = new File(filename);
-        if (out.exists()) assertTrue(out.delete());
+        Path filePath = tempDir.resolve(
+            GENERAL_TO_SAVE_NAME + FILE_EXTENSION
+        );
+        File out = filePath.toFile();
 
         generalToSave.save();
 
@@ -64,15 +55,20 @@ public class JSONStorageTest {
 
     @Test
     @DisplayName("Should correctly load General state from the JSON file")
-    void testLoad() throws Exception {
+    void testLoad(@TempDir Path tempDir) throws Exception {
+        storage = new JSONStorage();
+        storage.setDirectory(tempDir.toString());
+
         General generalToLoad = generalFactory.createGeneral(
             GENERAL_TO_LOAD_NAME, 0, storage
         );
         populateGeneralArmy(generalToLoad);  
 
-        JsonNode root     = serializeGeneralToJsonNode(generalToLoad);
-        String   filename = GENERAL_TO_LOAD_NAME + FILE_EXTENSION;
-        File     in       = new File(filename);
+        Path filePath = tempDir.resolve(
+            GENERAL_TO_LOAD_NAME + FILE_EXTENSION
+        );
+        File in = filePath.toFile();
+        JsonNode root = serializeGeneralToJsonNode(generalToLoad);
         mapper.writeValue(in, root);
 
         General generalLoaded = generalFactory.createGeneral(
