@@ -30,8 +30,8 @@ public class JSONStorageTest {
 
     private JSONStorage storage;
 
-    private File getGeneralFileFromTempDir(@TempDir Path tempDir) {
-        Path filePath = tempDir.resolve(GENERAL_NAME + FILE_EXTENSION);
+    private File getGeneralFileFromDirectory(Path directoryPath) {
+        Path filePath = directoryPath.resolve(GENERAL_NAME + FILE_EXTENSION);
         return filePath.toFile();
     }
 
@@ -46,7 +46,7 @@ public class JSONStorageTest {
         );
         populateGeneralArmy(generalToSave);
 
-        File out = getGeneralFileFromTempDir(tempDir);
+        File out = getGeneralFileFromDirectory(tempDir);
 
         generalToSave.save();
 
@@ -65,7 +65,7 @@ public class JSONStorageTest {
         );
         populateGeneralArmy(generalToLoad);  
 
-        File in = getGeneralFileFromTempDir(tempDir);
+        File in = getGeneralFileFromDirectory(tempDir);
 
         JsonNode root = serializeGeneralToJsonNode(generalToLoad);
         mapper.writeValue(in, root);
@@ -104,7 +104,7 @@ public class JSONStorageTest {
 
         General general = generalFactory.createGeneral(GENERAL_NAME, 10, storage);
 
-        getGeneralFileFromTempDir(tempDir).delete();
+        getGeneralFileFromDirectory(tempDir).delete();
 
         IllegalStateException ex = assertThrows(
             IllegalStateException.class,
@@ -121,7 +121,7 @@ public class JSONStorageTest {
         JSONStorage storage = new JSONStorage();
         storage.setDirectory(tempDir.toString());
 
-        File in = getGeneralFileFromTempDir(tempDir);
+        File in = getGeneralFileFromDirectory(tempDir);
 
         Files.writeString(in.toPath(), "{ invalid_json ");
         General general = generalFactory.createGeneral(
