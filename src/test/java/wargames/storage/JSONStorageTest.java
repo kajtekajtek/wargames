@@ -129,8 +129,8 @@ public class JSONStorageTest {
     }
 
     @Test
-    @DisplayName("Should handle concurrent saves without errors and create all files")
-    void testConcurrentSaves() {
+    @DisplayName("Should handle concurrent saves of different files without errors and create all files")
+    void testSaveConcurrentDifferentFiles() {
         int threads = 10;
         ExecutorService    executor = Executors.newFixedThreadPool(threads);
         List<Future<Void>> futures  = new ArrayList<>();
@@ -159,6 +159,40 @@ public class JSONStorageTest {
             assertTrue(f.exists());
             assertTrue(f.length() > 0);
         }
+    }
+
+    @Test
+    @DisplayName("Should handle concurrent saves of the same file without error and produce a valid JSON")
+    void testSaveConcurrentSameFile() throws InterruptedException {
+        General general = generalFactory.createGeneral(
+            GENERAL_NAME, 150, storage
+        );
+        populateGeneralArmy(general);
+        File outFile = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+        int  threads = 5;
+        ExecutorService    executor = Executors.newFixedThreadPool(threads);
+        List<Future<Void>> futures  = new ArrayList<>();
+
+        for (int i = 0; i < threads; i++) {
+            futures.add(executor.submit(() -> {
+                general.save();
+                return null;
+            }));
+        }
+
+        executor.shutdown();
+        assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+
+        for (Future<Void> f : futures) {
+            assertDoesNotThrow(() -> f.get());
+        }
+
+        assertTrue(outFile.exists());
+        assertTrue(outFile.length() > 0);
+
+        assertDoesNotThrow(() -> {
+            assertJsonFileContents(general, outFile);
+        });
     }
 
     @Test
