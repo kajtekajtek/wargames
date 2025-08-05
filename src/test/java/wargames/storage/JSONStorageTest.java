@@ -10,6 +10,9 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,6 +126,36 @@ public class JSONStorageTest {
             com.fasterxml.jackson.core.JsonProcessingException.class,
             general::load
         );
+    }
+
+    @Test
+    @DisplayName("Should handle concurrent saves without errors and create all files")
+    void testConcurrentSaves() {
+        int threads = 10;
+        ExecutorService    executor = Executors.newFixedThreadPool(threads);
+        List<Future<Void>> futures  = new ArrayList<>();
+
+        for (int i = 0; i < threads; i++) {
+            final int idx = i;
+            futures.add(executor.submit(() -> {
+                General g = generalFactory.createGeneral(
+                    GENERAL_NAME + idx, 100 + idx
+                );
+                g.save();
+                return null;
+            }));
+        }
+
+        for (Future<Void> f : futures) {
+            assertDoesNotThrow(() -> f.get());
+        }
+        executor.shutdown();
+
+        for (int i = 0; i < threads; i++) {
+            File f = getGeneralFileFromDirectory(GENERAL_NAME + i, tempDir);
+            assertTrue(f.exists());
+            assertTrue(f.length() > 0);
+        }
     }
 
     private void populateGeneralArmy(General general) {
