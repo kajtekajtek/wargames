@@ -29,7 +29,7 @@ public class JSONStorageTest {
     private final SoldierFactory soldierFactory = new SoldierFactory();
     private final GeneralFactory generalFactory = new GeneralFactory();
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = Mapper.getInstance();
 
     private JSONStorage storage;
 
