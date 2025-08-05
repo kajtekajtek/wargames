@@ -150,6 +150,9 @@ public class JSONStorageTest {
             assertDoesNotThrow(() -> f.get());
         }
         executor.shutdown();
+        assertDoesNotThrow(() -> {
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        });
 
         for (int i = 0; i < threads; i++) {
             File f = getGeneralFileFromDirectory(GENERAL_NAME + i, tempDir);
@@ -185,17 +188,17 @@ public class JSONStorageTest {
 
         storage.setDirectory(readOnlyDir.getAbsolutePath());
 
-        General g = generalFactory.createGeneral("NoWrite", 0);
+        General general = generalFactory.createGeneral(GENERAL_NAME, 0);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-            g::save
-        );
-
-        readOnlyDir.setWritable(true);
-
-        String msg = ex.getMessage();
-        assertTrue(msg.toLowerCase().contains("io")
-                || msg.toLowerCase().contains("unable"));
+        try {
+            IllegalStateException ex = assertThrows(
+                IllegalStateException.class, general::save
+            );        
+            String msg = ex.getMessage();
+            assertTrue(msg.toLowerCase().contains("unable to write"));
+        } finally {
+            readOnlyDir.setWritable(true);
+        }
     }
 
     private void populateGeneralArmy(General general) {
