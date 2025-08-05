@@ -30,23 +30,24 @@ public class JSONStorageTest {
 
     private JSONStorage storage;
 
-    private File getGeneralFileFromDirectory(Path directoryPath) {
-        Path filePath = directoryPath.resolve(GENERAL_NAME + FILE_EXTENSION);
-        return filePath.toFile();
+    @TempDir
+    Path tempDir;
+
+    @BeforeEach 
+    void setUp() {
+        storage = new JSONStorage();
+        storage.setDirectory(tempDir.toString());
     }
 
     @Test
     @DisplayName("Should create a JSON file with correct content")
-    void testSave(@TempDir Path tempDir) throws Exception {
-        storage = new JSONStorage();
-        storage.setDirectory(tempDir.toString());
-
+    void testSave() throws Exception {
         General generalToSave = generalFactory.createGeneral(
             GENERAL_NAME, 100, storage
         );
         populateGeneralArmy(generalToSave);
 
-        File out = getGeneralFileFromDirectory(tempDir);
+        File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
         generalToSave.save();
 
@@ -56,16 +57,13 @@ public class JSONStorageTest {
 
     @Test
     @DisplayName("Should correctly load General state from the JSON file")
-    void testLoad(@TempDir Path tempDir) throws Exception {
-        storage = new JSONStorage();
-        storage.setDirectory(tempDir.toString());
-
+    void testLoad() throws Exception {
         General generalToLoad = generalFactory.createGeneral(
             GENERAL_NAME, 0, storage
         );
         populateGeneralArmy(generalToLoad);  
 
-        File in = getGeneralFileFromDirectory(tempDir);
+        File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
         JsonNode root = serializeGeneralToJsonNode(generalToLoad);
         mapper.writeValue(in, root);
@@ -80,10 +78,7 @@ public class JSONStorageTest {
 
     @Test
     @DisplayName("Should preserve full General state")
-    void testSaveAndLoad(@TempDir Path tempDir) {
-        storage = new JSONStorage();
-        storage.setDirectory(tempDir.toString());
-
+    void testSaveAndLoad() {
         General original = generalFactory.createGeneral(
             GENERAL_NAME, 50, storage
         );
@@ -97,14 +92,13 @@ public class JSONStorageTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalStateExceptionon when loading non-existent file")
-    void testLoadNonExistentFile(@TempDir Path tempDir) {
-        storage = new JSONStorage();
-        storage.setDirectory(tempDir.toString());
+    @DisplayName("Should throw IllegalStateException on when loading non-existent file")
+    void testLoadNonExistentFile() {
+        General general = generalFactory.createGeneral(
+            GENERAL_NAME, 10, storage
+        );
 
-        General general = generalFactory.createGeneral(GENERAL_NAME, 10, storage);
-
-        getGeneralFileFromDirectory(tempDir).delete();
+        getGeneralFileFromDirectory(GENERAL_NAME, tempDir).delete();
 
         IllegalStateException ex = assertThrows(
             IllegalStateException.class,
@@ -117,11 +111,8 @@ public class JSONStorageTest {
 
     @Test
     @DisplayName("Should throw JsonProcessingException when trying to load malformed JSON")
-    void testLoadMalformedJson(@TempDir Path tempDir) throws Exception {
-        JSONStorage storage = new JSONStorage();
-        storage.setDirectory(tempDir.toString());
-
-        File in = getGeneralFileFromDirectory(tempDir);
+    void testLoadMalformedJson() throws Exception {
+        File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
         Files.writeString(in.toPath(), "{ invalid_json ");
         General general = generalFactory.createGeneral(
@@ -141,6 +132,11 @@ public class JSONStorageTest {
                 soldierFactory.createSoldier(Rank.fromValue(i), i)
             );
         }
+    }
+
+    private File getGeneralFileFromDirectory(String generalName, Path directoryPath) {
+        Path filePath = directoryPath.resolve(generalName + FILE_EXTENSION);
+        return filePath.toFile();
     }
 
     private void assertJsonFileContents(General general, File file) throws Exception {
