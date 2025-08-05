@@ -176,6 +176,28 @@ public class JSONStorageTest {
         assertTrue(msg.contains("directory") || msg.contains("not a folder"));
     }
 
+    @Test
+    @DisplayName("Should wrap IOException when unable to write file")
+    void testSaveNonWritableDir() {
+        File readOnlyDir = tempDir.resolve("readonly").toFile();
+        assertTrue(readOnlyDir.mkdir());
+        assertTrue(readOnlyDir.setWritable(false));
+
+        storage.setDirectory(readOnlyDir.getAbsolutePath());
+
+        General g = generalFactory.createGeneral("NoWrite", 0);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+            g::save
+        );
+
+        readOnlyDir.setWritable(true);
+
+        String msg = ex.getMessage();
+        assertTrue(msg.toLowerCase().contains("io")
+                || msg.toLowerCase().contains("unable"));
+    }
+
     private void populateGeneralArmy(General general) {
         Army army = general.getArmy();
         for (int i = 1; i <= GENERAL_ARMY_SIZE; i++) {
