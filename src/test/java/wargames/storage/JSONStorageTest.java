@@ -158,6 +158,24 @@ public class JSONStorageTest {
         }
     }
 
+    @Test
+    @DisplayName("Should throw IllegalStateException when directory is invalid")
+    void testSaveInvalidDirectory() {
+        File bogus = tempDir.resolve("not_a_dir.json").toFile();
+        assertDoesNotThrow(bogus::createNewFile);
+
+        storage.setDirectory(bogus.getAbsolutePath());
+
+        General g = generalFactory.createGeneral("ShouldFail", 999);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, 
+            g::save
+        );
+
+        String msg = ex.getMessage();
+        assertTrue(msg.contains("directory") || msg.contains("not a folder"));
+    }
+
     private void populateGeneralArmy(General general) {
         Army army = general.getArmy();
         for (int i = 1; i <= GENERAL_ARMY_SIZE; i++) {
