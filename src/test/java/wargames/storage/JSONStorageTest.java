@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import wargames.factories.*;
 import wargames.models.*;
+import wargames.exceptions.*;
 
 public class JSONStorageTest {
 
@@ -96,7 +97,7 @@ public class JSONStorageTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalStateException on when loading non-existent file")
+    @DisplayName("Should throw LoadFromGeneralStorageException when loading non-existent file")
     void testLoadNonExistentFile() {
         General general = generalFactory.createGeneral(
             GENERAL_NAME, 10, storage
@@ -104,8 +105,8 @@ public class JSONStorageTest {
 
         getGeneralFileFromDirectory(GENERAL_NAME, tempDir).delete();
 
-        IllegalStateException ex = assertThrows(
-            IllegalStateException.class,
+        LoadFromGeneralStorageException ex = assertThrows(
+            LoadFromGeneralStorageException.class,
             general::load
         );
         assertTrue(ex.getMessage().contains(
@@ -114,7 +115,7 @@ public class JSONStorageTest {
     }
 
     @Test
-    @DisplayName("Should throw JsonProcessingException when trying to load malformed JSON")
+    @DisplayName("Should throw LoadFromGeneralStorageException when trying to load malformed JSON")
     void testLoadMalformedJson() throws Exception {
         File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
@@ -124,7 +125,7 @@ public class JSONStorageTest {
         );
 
         assertThrows(
-            com.fasterxml.jackson.core.JsonProcessingException.class,
+            LoadFromGeneralStorageException.class,
             general::load
         );
     }
@@ -197,7 +198,7 @@ public class JSONStorageTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalStateException when directory is invalid")
+    @DisplayName("Should throw SaveToGeneralStorageException when directory is invalid")
     void testSaveInvalidDirectory() {
         File bogus = tempDir.resolve("not_a_dir.json").toFile();
         assertDoesNotThrow(bogus::createNewFile);
@@ -208,7 +209,8 @@ public class JSONStorageTest {
             "ShouldFail", 999, storage
         );
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, 
+        SaveToGeneralStorageException ex = assertThrows(
+            SaveToGeneralStorageException.class, 
             g::save
         );
 
@@ -230,8 +232,9 @@ public class JSONStorageTest {
         );
 
         try {
-            IllegalStateException ex = assertThrows(
-                IllegalStateException.class, general::save
+            SaveToGeneralStorageException ex = assertThrows(
+                SaveToGeneralStorageException.class, 
+                general::save
             );        
             String msg = ex.getMessage();
             assertTrue(msg.toLowerCase().contains("unable to write"));
