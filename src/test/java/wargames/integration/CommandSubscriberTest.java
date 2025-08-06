@@ -7,7 +7,6 @@ import org.junit.jupiter.api.*;
 import java.util.*;
 
 import wargames.testutils.testmodels.*;
-import wargames.events.subscribers.Subscriber;
 import wargames.events.publisher.EventDispatcher;
 import wargames.events.*;
 import wargames.models.*;
