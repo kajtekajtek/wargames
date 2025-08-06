@@ -87,11 +87,11 @@ public class JSONStorageTest {
         );
         populateGeneralArmy(original);
 
-        original.save();
+        assertDoesNotThrow(original::save);
         General loaded = generalFactory.createGeneral(
             GENERAL_NAME, 0, storage
         );
-        loaded.load();
+        assertDoesNotThrow(loaded::load);
 
         assertEqualGenerals(original, loaded);
     }
