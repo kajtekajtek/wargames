@@ -19,7 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import wargames.factories.*;
 import wargames.models.*;
-import wargames.exceptions.*;
+import wargames.exceptions.StorageExceptions.JSONStorageExceptions.LoadJSONStorageException;
+import wargames.exceptions.StorageExceptions.JSONStorageExceptions.SaveJSONStorageException;
 
 public class JSONStorageTest {
 
@@ -52,7 +53,7 @@ public class JSONStorageTest {
 
         File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
-        generalToSave.save();
+        storage.save(generalToSave);
 
         assertTrue(out.exists());
         assertJsonFileContents(generalToSave, out);
@@ -74,7 +75,7 @@ public class JSONStorageTest {
         General generalLoaded = generalFactory.createGeneral(
             GENERAL_NAME, 0, storage
         );
-        generalLoaded.load();
+        storage.load(generalLoaded);
 
         assertEqualGenerals(generalToLoad, generalLoaded);
     }
@@ -87,17 +88,17 @@ public class JSONStorageTest {
         );
         populateGeneralArmy(original);
 
-        assertDoesNotThrow(original::save);
+        assertDoesNotThrow(() -> storage.save(original));
         General loaded = generalFactory.createGeneral(
             GENERAL_NAME, 0, storage
         );
-        assertDoesNotThrow(loaded::load);
+        assertDoesNotThrow(() -> storage.load(loaded));
 
         assertEqualGenerals(original, loaded);
     }
 
     @Test
-    @DisplayName("Should throw LoadFromGeneralStorageException when loading non-existent file")
+    @DisplayName("Should throw LoadJSONStorageException when loading non-existent file")
     void testLoadNonExistentFile() {
         General general = generalFactory.createGeneral(
             GENERAL_NAME, 10, storage
@@ -105,17 +106,19 @@ public class JSONStorageTest {
 
         getGeneralFileFromDirectory(GENERAL_NAME, tempDir).delete();
 
-        LoadFromGeneralStorageException ex = assertThrows(
-            LoadFromGeneralStorageException.class,
-            general::load
+        LoadJSONStorageException ex = assertThrows(
+            LoadJSONStorageException.class,
+            () -> storage.load(general)
         );
-        assertTrue(ex.getMessage().contains(
-            "cannot load " + GENERAL_NAME + FILE_EXTENSION
-        ));
+        String msg = ex.getMessage();
+        assertTrue(
+            msg.contains("could not load from JSON file: ") &&
+            msg.contains(GENERAL_NAME + FILE_EXTENSION)
+        );
     }
 
     @Test
-    @DisplayName("Should throw LoadFromGeneralStorageException when trying to load malformed JSON")
+    @DisplayName("Should throw LoadJSONStorageException when trying to load malformed JSON")
     void testLoadMalformedJson() throws Exception {
         File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
@@ -124,9 +127,14 @@ public class JSONStorageTest {
             GENERAL_NAME, 0, storage
         );
 
-        assertThrows(
-            LoadFromGeneralStorageException.class,
-            general::load
+        LoadJSONStorageException ex = assertThrows(
+            LoadJSONStorageException.class,
+            () -> storage.load(general)
+        );
+        String msg = ex.getMessage();
+        assertTrue(
+            msg.contains("could not load from JSON file: ") &&
+            msg.contains(GENERAL_NAME + FILE_EXTENSION)
         );
     }
 
@@ -143,7 +151,7 @@ public class JSONStorageTest {
                 General g = generalFactory.createGeneral(
                     GENERAL_NAME + idx, 100 + idx, storage
                 );
-                g.save();
+                storage.save(g);
                 return null;
             }));
         }
@@ -177,7 +185,7 @@ public class JSONStorageTest {
 
         for (int i = 0; i < threads; i++) {
             futures.add(executor.submit(() -> {
-                general.save();
+                storage.save(general);
                 return null;
             }));
         }
@@ -198,7 +206,7 @@ public class JSONStorageTest {
     }
 
     @Test
-    @DisplayName("Should throw SaveToGeneralStorageException when directory is invalid")
+    @DisplayName("Should throw SaveJSONStorageException when directory is invalid")
     void testSaveInvalidDirectory() {
         File bogus = tempDir.resolve("not_a_dir.json").toFile();
         assertDoesNotThrow(bogus::createNewFile);
@@ -209,17 +217,18 @@ public class JSONStorageTest {
             "ShouldFail", 999, storage
         );
 
-        SaveToGeneralStorageException ex = assertThrows(
-            SaveToGeneralStorageException.class, 
-            g::save
+        SaveJSONStorageException ex = assertThrows(
+            SaveJSONStorageException.class, 
+            () -> storage.save(g)
         );
 
         String msg = ex.getMessage();
+        assertTrue(msg.contains("could not save to JSON file: "));
         assertTrue(msg.contains("directory") || msg.contains("not a folder"));
     }
 
     @Test
-    @DisplayName("Should wrap IOException when unable to write file")
+    @DisplayName("Should throw SaveJSONStorageException when unable to write file")
     void testSaveNonWritableDir() {
         File readOnlyDir = tempDir.resolve("readonly").toFile();
         assertTrue(readOnlyDir.mkdir());
@@ -232,11 +241,12 @@ public class JSONStorageTest {
         );
 
         try {
-            SaveToGeneralStorageException ex = assertThrows(
-                SaveToGeneralStorageException.class, 
-                general::save
+            SaveJSONStorageException ex = assertThrows(
+                SaveJSONStorageException.class, 
+                () -> storage.save(general)
             );        
             String msg = ex.getMessage();
+            assertTrue(msg.toLowerCase().contains("could not save to JSON file: "));
             assertTrue(msg.toLowerCase().contains("unable to write"));
         } finally {
             readOnlyDir.setWritable(true);
