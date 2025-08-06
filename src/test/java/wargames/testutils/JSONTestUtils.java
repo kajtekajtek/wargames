@@ -11,8 +11,16 @@ public final class JSONTestUtils {
     private JSONTestUtils() { }
 
     public static void assertJsonNodeContents(General g, JsonNode jn) {
-        assertEquals(g.getName(), jn.get("name").asText());
-        assertEquals(g.getGold(), jn.get("gold").asInt());
+        assertNotNull(jn);
+
+        assertNotNull(jn.get("name"));
+        String nameField = jn.get("name").asText();
+
+        assertNotNull(jn.get("gold"));
+        int goldField = jn.get("gold").asInt();
+
+        assertEquals(g.getName(), nameField);
+        assertEquals(g.getGold(), goldField);
     }
 
     public static void assertJsonNodeContents(Army a, JsonNode jn) {
