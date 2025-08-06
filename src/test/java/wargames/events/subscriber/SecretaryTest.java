@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.*;
 import java.io.*;
 import java.util.List;
 
+import wargames.testutils.testmodels.*;
 import wargames.commands.*;
 import wargames.models.*;
 import wargames.factories.*;
@@ -42,9 +43,6 @@ public class SecretaryTest {
     @DisplayName("Should log event message to system out on update")
     class UpdateTest {
 
-        /* toy event implementation */
-        private class TestEvent implements Event { }
-
         /* all log messages */
         private final String expectedMessagePrefix = "Secretary: ";
         private final String expectedMessageSuffix = "\n";
@@ -75,15 +73,6 @@ public class SecretaryTest {
         @Nested
         @DisplayName("Should log command execution messages on CommandEvent update")
         class UpdateCommandEventTest {
-
-            /* toy command implementation */
-            private class TestCommand extends Command {
-
-                public TestCommand(General g, EventDispatcher d) { super(g, d); }
-
-                @Override
-                public void execute() { }
-            }
 
             private final SoldierFactory soldierFactory = new SoldierFactory();
             private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);

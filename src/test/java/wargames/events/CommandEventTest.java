@@ -3,6 +3,7 @@ package wargames.events;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
+import wargames.testutils.testmodels.*;
 import wargames.models.General;
 import wargames.commands.Command;
 import wargames.events.publisher.EventDispatcher;
@@ -12,14 +13,6 @@ public class CommandEventTest {
 
     @Nested
     class BeforeAndAfterCommandEvent {
-
-        private class TestCommand extends Command {
-
-            public TestCommand(General g, EventDispatcher d) { super(g, d); }
-
-            @Override
-            public void execute() { }
-        }
 
         private final GeneralFactory generalFactory = new GeneralFactory();
 
