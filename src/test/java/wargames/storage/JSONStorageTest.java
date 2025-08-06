@@ -38,8 +38,7 @@ public class JSONStorageTest {
 
     @BeforeEach 
     void setUp() {
-        storage = new JSONStorage();
-        storage.setDirectory(tempDir.toString());
+        storage = new JSONStorage(tempDir.toString());
     }
 
     @Test
@@ -88,7 +87,9 @@ public class JSONStorageTest {
         populateGeneralArmy(original);
 
         original.save();
-        General loaded = generalFactory.createGeneral(GENERAL_NAME, 0, storage);
+        General loaded = generalFactory.createGeneral(
+            GENERAL_NAME, 0, storage
+        );
         loaded.load();
 
         assertEqualGenerals(original, loaded);
@@ -139,7 +140,7 @@ public class JSONStorageTest {
             final int idx = i;
             futures.add(executor.submit(() -> {
                 General g = generalFactory.createGeneral(
-                    GENERAL_NAME + idx, 100 + idx
+                    GENERAL_NAME + idx, 100 + idx, storage
                 );
                 g.save();
                 return null;
@@ -201,9 +202,11 @@ public class JSONStorageTest {
         File bogus = tempDir.resolve("not_a_dir.json").toFile();
         assertDoesNotThrow(bogus::createNewFile);
 
-        storage.setDirectory(bogus.getAbsolutePath());
+        storage = new JSONStorage(bogus.toString());
 
-        General g = generalFactory.createGeneral("ShouldFail", 999);
+        General g = generalFactory.createGeneral(
+            "ShouldFail", 999, storage
+        );
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, 
             g::save
@@ -220,9 +223,11 @@ public class JSONStorageTest {
         assertTrue(readOnlyDir.mkdir());
         assertTrue(readOnlyDir.setWritable(false));
 
-        storage.setDirectory(readOnlyDir.getAbsolutePath());
+        storage = new JSONStorage(readOnlyDir.toString());
 
-        General general = generalFactory.createGeneral(GENERAL_NAME, 0);
+        General general = generalFactory.createGeneral(
+            GENERAL_NAME, 0, storage
+        );
 
         try {
             IllegalStateException ex = assertThrows(
