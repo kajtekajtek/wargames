@@ -245,8 +245,8 @@ public class JSONStorageTest {
                 () -> storage.save(general)
             );        
             String msg = ex.getMessage();
-            assertTrue(msg.toLowerCase().contains("could not save to JSON file: "));
-            assertTrue(msg.toLowerCase().contains("unable to write"));
+            assertTrue(msg.contains("could not save to JSON file: "));
+            assertTrue(msg.contains("unable to write"));
         } finally {
             readOnlyDir.setWritable(true);
         }
