@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -143,14 +144,18 @@ public class JSONStorageTest {
         int threads = 10;
         ExecutorService    executor = Executors.newFixedThreadPool(threads);
         List<Future<Void>> futures  = new ArrayList<>();
+        List<General>      generals = new ArrayList<>();
 
         for (int i = 0; i < threads; i++) {
             final int idx = i;
+
+            General general = generalFactory.createGeneral(
+                GENERAL_NAME + idx, 100 + idx, storage
+            );
+            generals.add(general);
+
             futures.add(executor.submit(() -> {
-                General g = generalFactory.createGeneral(
-                    GENERAL_NAME + idx, 100 + idx, storage
-                );
-                storage.save(g);
+                storage.save(general);
                 return null;
             }));
         }
@@ -167,6 +172,7 @@ public class JSONStorageTest {
             File f = getGeneralFileFromDirectory(GENERAL_NAME + i, tempDir);
             assertTrue(f.exists());
             assertTrue(f.length() > 0);
+            assertJsonFileContents(generals.get(i), f);
         }
     }
 
@@ -199,9 +205,7 @@ public class JSONStorageTest {
         assertTrue(outFile.exists());
         assertTrue(outFile.length() > 0);
 
-        assertDoesNotThrow(() -> {
-            assertJsonFileContents(general, outFile);
-        });
+        assertJsonFileContents(general, outFile);
     }
 
     @Test
@@ -266,9 +270,15 @@ public class JSONStorageTest {
         return filePath.toFile();
     }
 
-    private void assertJsonFileContents(General general, File file) throws Exception {
+    private void assertJsonFileContents(General general, File file) {
         Army     army     = general.getArmy();
-        JsonNode rootNode = mapper.readTree(file);
+        JsonNode rootNode = mapper.createObjectNode();
+
+        try {
+            rootNode = mapper.readTree(file);
+        } catch (IOException e) {
+            assertNull(e, "could not read file " + file.getAbsolutePath());
+        }
 
         assertJsonNodeContents(general, rootNode);
 
