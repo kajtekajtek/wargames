@@ -48,7 +48,9 @@ public class JSONStorage implements StorageStrategy {
         try {
             Files.createDirectories(Path.of(directoryPathString));
         } catch (IOException e) {
-            throw new SaveJSONStorageException(e.getMessage());
+            throw new SaveJSONStorageException(
+                "could not create directory: " + getExceptionMessage(e)
+            );
         }
     }
 
@@ -63,9 +65,14 @@ public class JSONStorage implements StorageStrategy {
             this.mapper.writeValue(writer, general);
 
         } catch (IOException e) {
-            throw new SaveJSONStorageException(e.getMessage());
-
+            throw new SaveJSONStorageException(
+                "unable to write " + path + ": " + getExceptionMessage(e)
+            );
         }
+    }
+
+    private String getExceptionMessage(Exception e) {
+        return e.getClass().getName() + ": " + e.getMessage();
     }
 
     public void load(General g) throws LoadJSONStorageException { }
