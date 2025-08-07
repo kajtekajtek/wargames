@@ -2,6 +2,10 @@ package wargames.models;
 
 import wargames.commands.Command;
 import wargames.exceptions.InsufficientGoldException;
+import wargames.exceptions.LoadGeneralStateException;
+import wargames.exceptions.SaveGeneralStateException;
+import wargames.exceptions.StorageExceptions.LoadStorageException;
+import wargames.exceptions.StorageExceptions.SaveStorageException;
 import wargames.storage.*;
 
 public class General {
@@ -55,11 +59,23 @@ public class General {
         cmd.executeAndUpdate();
     }
 
-    public void save() {
-        this.storage.save(this);
+    public void save() throws SaveGeneralStateException {
+        try {
+            this.storage.save(this);
+
+        } catch (SaveStorageException e) {
+            throw new SaveGeneralStateException(this, e.getMessage());
+
+        }
     }
 
-    public void load() {
-        this.storage.load(this);
+    public void load() throws LoadGeneralStateException {
+        try {
+            this.storage.load(this);
+
+        } catch (LoadStorageException e) {
+            throw new LoadGeneralStateException(this, e.getMessage());
+
+        }
     }
 }
