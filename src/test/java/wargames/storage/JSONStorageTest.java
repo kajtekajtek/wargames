@@ -69,8 +69,7 @@ public class JSONStorageTest {
 
         File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
 
-        JsonNode root = serializeGeneralToJsonNode(generalToLoad);
-        mapper.writeValue(in, root);
+        mapper.writeValue(in, generalToLoad);
 
         General generalLoaded = generalFactory.createGeneral(
             GENERAL_NAME, 0, storage
@@ -276,16 +275,10 @@ public class JSONStorageTest {
         JsonNode armyNode = rootNode.get("army");
         assertJsonNodeContents(army, armyNode);
 
+        JsonNode soldiersNode = armyNode.get("soldiers");
         for (int i = 0; i < army.getSize(); i++) {
-            JsonNode soldierNode = armyNode.get(i);
+            JsonNode soldierNode = soldiersNode.get(i);
             assertJsonNodeContents(army.getSoldiers().get(i), soldierNode);
         }
-    }
-
-    private JsonNode serializeGeneralToJsonNode(General general) {
-        return mapper.createObjectNode()
-            .put("name", general.getName())
-            .put("gold", general.getGold())
-            .set("army", mapper.valueToTree(general.getArmy()));
     }
 }
