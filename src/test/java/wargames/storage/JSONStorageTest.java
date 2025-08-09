@@ -1,6 +1,7 @@
 package wargames.storage;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static wargames.testutils.TestUtils.*;
 import static wargames.testutils.JSONTestUtils.*;
 import static wargames.testutils.ModelsTestUtils.*;
 
@@ -111,9 +112,10 @@ public class JSONStorageTest {
             () -> storage.load(general)
         );
         String msg = ex.getMessage();
-        assertTrue(
-            msg.contains("could not load from JSON file: ") &&
-            msg.contains(GENERAL_NAME + FILE_EXTENSION)
+        assertStringContains(msg, 
+            "could not load from JSON file: ",
+            GENERAL_NAME + FILE_EXTENSION,
+            "unable to read"
         );
     }
 
@@ -132,9 +134,10 @@ public class JSONStorageTest {
             () -> storage.load(general)
         );
         String msg = ex.getMessage();
-        assertTrue(
-            msg.contains("could not load from JSON file: ") &&
-            msg.contains(GENERAL_NAME + FILE_EXTENSION)
+        assertStringContains(msg, 
+            "could not load from JSON file: ", 
+            GENERAL_NAME + FILE_EXTENSION, 
+            "unable to parse"
         );
     }
 
@@ -226,8 +229,11 @@ public class JSONStorageTest {
         );
 
         String msg = ex.getMessage();
-        assertTrue(msg.contains("could not save to JSON file: "));
-        assertTrue(msg.contains("directory") || msg.contains("not a folder"));
+        assertStringContains(msg, 
+            "could not save to JSON file: ",
+            "directory",
+            "not_a_dir.json"
+        );
     }
 
     @Test
@@ -249,8 +255,8 @@ public class JSONStorageTest {
                 () -> storage.save(general)
             );        
             String msg = ex.getMessage();
-            assertTrue(msg.contains("could not save to JSON file: "));
-            assertTrue(msg.contains("unable to write"));
+            assertStringContains(msg, 
+                "could not save to JSON file: ", "unable to write");
         } finally {
             readOnlyDir.setWritable(true);
         }
