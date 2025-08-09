@@ -13,4 +13,8 @@ public class GeneralFactory {
         return new General(new Army(), name, gold, storage);
     }
 
+    public General createGeneral(Army army, String name, int gold, StorageStrategy storage) {
+        return new General(army, name, gold, storage);
+    }
+
 }
