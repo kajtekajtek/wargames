@@ -62,6 +62,11 @@ public class General {
     public void save() throws SaveGeneralStateException {
         try {
             this.storage.save(this);
+        
+        } catch (NullPointerException e) {
+            throw new SaveGeneralStateException(
+                this, "no storage assigned to the general"
+            );
 
         } catch (SaveStorageException e) {
             throw new SaveGeneralStateException(this, e.getMessage());
@@ -72,6 +77,11 @@ public class General {
     public void load() throws LoadGeneralStateException {
         try {
             this.storage.load(this);
+
+        } catch (NullPointerException e) {
+            throw new LoadGeneralStateException(
+                this, "no storage assigned to the general"
+            );
 
         } catch (LoadStorageException e) {
             throw new LoadGeneralStateException(this, e.getMessage());
