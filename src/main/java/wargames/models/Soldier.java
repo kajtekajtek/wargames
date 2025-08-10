@@ -8,6 +8,8 @@ public class Soldier
 
     public static final int PROMOTION_RANK_MULTIPLIER = 5;
 
+    public Soldier() { super(); }    
+
     public Soldier(Rank rank) {
         this.rank  = rank;
         this.exp   = 1;
