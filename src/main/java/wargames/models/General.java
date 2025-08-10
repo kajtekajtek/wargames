@@ -15,6 +15,8 @@ public class General {
     private int    gold;
     private StorageStrategy storage;
 
+    public General() { super(); }    
+
     public General(Army army, String name, int gold, StorageStrategy storage) {
         this.army    = army;
         this.name    = name;
