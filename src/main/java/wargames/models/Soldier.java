@@ -8,16 +8,19 @@ public class Soldier
 
     public static final int PROMOTION_RANK_MULTIPLIER = 5;
 
-    // constructors
-    public static Soldier withRank(Rank rank) {
-        return new Soldier(rank, 1, true);
+    public Soldier(Rank rank) {
+        this.rank  = rank;
+        this.exp   = 1;
+        this.alive = true;
+    }    
+
+    public Soldier(Rank rank, int exp) {
+        this.rank  = rank;
+        this.exp   = exp;
+        this.alive = true;
     }
 
-    public static Soldier withRankAndExp(Rank rank, int exp) {
-        return new Soldier(rank, exp, true);
-    }
-
-    private Soldier(Rank rank, int exp, boolean alive) {
+    public Soldier(Rank rank, int exp, boolean alive) {
         this.rank  = rank;
         this.exp   = exp;
         this.alive = alive;
