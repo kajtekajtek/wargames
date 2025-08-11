@@ -13,6 +13,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.nio.file.StandardCopyOption;
+
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +28,9 @@ public class JSONStorage implements StorageStrategy {
 
     private static final String DEFAULT_DIRECTORY_PATH = "data";
     private static final String FILE_EXTENSION = ".json";
+
+    private static final ConcurrentHashMap<Path, ReentrantLock> LOCAL_LOCKS
+        = new ConcurrentHashMap<>();
 
     private final ObjectMapper mapper = Mapper.getInstance();
 
@@ -41,7 +48,18 @@ public class JSONStorage implements StorageStrategy {
         Path filePath = prepareFilePath(general);
         createDirectories(filePath.getParent());
 
-        writeValueToFile(filePath, general);
+        ReentrantLock local = lockFor(filePath); local.lock();
+        try     { writeValueToFile(filePath, general); }
+        finally { local.unlock(); }
+    }
+
+    public void load(General general) throws LoadJSONStorageException {
+        Path    filePath = prepareFilePath(general);
+        General loaded   = readValueFromFile(filePath, general);
+
+        general.setArmy(loaded.getArmy());
+        general.setName(loaded.getName());
+        general.setGold(loaded.getGold());
     }
 
     private Path prepareFilePath(General g) {
@@ -60,16 +78,26 @@ public class JSONStorage implements StorageStrategy {
         }
     }
 
+    private static ReentrantLock lockFor(Path p) {
+        return LOCAL_LOCKS.computeIfAbsent(
+            p.toAbsolutePath().normalize(),
+            k -> new ReentrantLock()
+        );
+    }
+
     private void writeValueToFile(Path path, General general) throws SaveJSONStorageException {
+        Path tmp = path.resolveSibling(path.getFileName() + ".tmp");
+
         try (
-            FileChannel    channel = openFileChannel(path);
+            FileChannel    channel = openFileChannel(tmp);
             FileLock       lock    = channel.lock();
             BufferedWriter writer  = Files.newBufferedWriter(
-                path, StandardCharsets.UTF_8
+                tmp, StandardCharsets.UTF_8
             );
 
         ) {
             this.mapper.writeValue(writer, general);
+            move(tmp, path);
 
         } catch (StreamReadException e) {
             throw new SaveJSONStorageException(
@@ -88,6 +116,8 @@ public class JSONStorage implements StorageStrategy {
                 "unable to write " + path + ": " + getExceptionMessage(e)
             );
 
+        } finally {
+            try { Files.deleteIfExists(tmp); } catch (IOException ignore) {}
         }
     }
 
@@ -100,13 +130,16 @@ public class JSONStorage implements StorageStrategy {
         );
     }
 
-    public void load(General general) throws LoadJSONStorageException {
-        Path    filePath = prepareFilePath(general);
-        General loaded   = readValueFromFile(filePath, general);
+    private void move(Path src, Path dst) throws IOException {
+        try {
+            Files.move(src, dst,
+                StandardCopyOption.REPLACE_EXISTING,
+                StandardCopyOption.ATOMIC_MOVE);
 
-        general.setArmy(loaded.getArmy());
-        general.setName(loaded.getName());
-        general.setGold(loaded.getGold());
+        } catch (IOException atomicMoveNotSupported) {
+            Files.move(src, dst,
+                StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     private General readValueFromFile(Path path, General general) throws LoadJSONStorageException {
