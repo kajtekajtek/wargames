@@ -256,23 +256,106 @@ public class JSONStorageTest {
             );
         }
 
+        @Test
+        @DisplayName("Should handle concurrent loads of the same file into separate objects")
+        void testLoadConcurrentSameFile() {
+            General original = generalFactory.createGeneral(
+                GENERAL_NAME, 123, storage
+            ); 
+            populateGeneralArmy(original);
+            assertDoesNotThrow(() -> storage.save(original));
+
+            final int threads = 10;
+            ExecutorService executor = Executors.newFixedThreadPool(threads);
+            CountDownLatch  start    = new CountDownLatch(1);
+            List<Future<General>> futures = new ArrayList<>();
+
+            for (int i = 0; i < threads; i++) {
+                futures.add(executor.submit(() -> {
+                    General g = generalFactory.createGeneral(
+                        GENERAL_NAME, 0, storage
+                    );
+                    start.await();
+                    storage.load(g);
+                    return g;
+                }));
+            }
+
+            start.countDown();
+
+            for (Future<General> f : futures) {
+                assertDoesNotThrow(() -> {
+                    General loaded = f.get();
+                    assertEqualGenerals(original, loaded);
+                });
+            }
+            executor.shutdown();
+            assertDoesNotThrow(() -> executor.awaitTermination(5, TimeUnit.SECONDS));
+
+            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            assertTrue(out.exists());
+            assertTrue(out.length() > 0);
+            assertJsonFileContents(original, out);
+        }
+
+        @Test
+        @DisplayName("Should handle concurrent loads of different files")
+        void testLoadConcurrentDifferentFiles() throws Exception {
+            final int files = 8;
+            List<General> originals = new ArrayList<>();
+            for (int i = 0; i < files; i++) {
+                General g = generalFactory.createGeneral(
+                    GENERAL_NAME + i, 200 + i, storage
+                );
+                populateGeneralArmy(g);
+                storage.save(g);
+                originals.add(g);
+            }
+
+            ExecutorService    executor = Executors.newFixedThreadPool(files);
+            List<Future<Void>> futures  = new ArrayList<>();
+
+            for (int i = 0; i < files; i++) {
+                final int idx = i;
+                futures.add(executor.submit(() -> {
+                    General loaded = generalFactory.createGeneral(
+                        GENERAL_NAME + idx, 0, storage
+                    );
+                    storage.load(loaded);
+                    assertEqualGenerals(originals.get(idx), loaded);
+                    return null;
+                }));
+            }
+
+            for (Future<Void> f : futures) {
+                assertDoesNotThrow(() -> f.get());
+            }
+            executor.shutdown();
+            assertDoesNotThrow(() -> executor.awaitTermination(5, TimeUnit.SECONDS));
+        }
+
     }
 
-    @Test
-    @DisplayName("Should preserve full General state")
-    void testSaveAndLoad() {
-        General original = generalFactory.createGeneral(
-            GENERAL_NAME, 50, storage
-        );
-        populateGeneralArmy(original);
+    @Nested
+    class SaveAndLoadTest {
 
-        assertDoesNotThrow(() -> storage.save(original));
-        General loaded = generalFactory.createGeneral(
-            GENERAL_NAME, 0, storage
-        );
-        assertDoesNotThrow(() -> storage.load(loaded));
+        @Test
+        @DisplayName("Should preserve full General state")
+        void testSaveAndLoad() {
+            General original = generalFactory.createGeneral(
+                GENERAL_NAME, 50, storage
+            );
+            populateGeneralArmy(original);
 
-        assertEqualGenerals(original, loaded);
+            assertDoesNotThrow(() -> storage.save(original));
+            General loaded = generalFactory.createGeneral(
+                GENERAL_NAME, 0, storage
+            );
+            assertDoesNotThrow(() -> storage.load(loaded));
+
+            assertEqualGenerals(original, loaded);
+        }
+
     }
 
     private void populateGeneralArmy(General general) {
