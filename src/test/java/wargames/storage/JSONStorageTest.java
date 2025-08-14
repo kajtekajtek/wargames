@@ -46,6 +46,8 @@ public class JSONStorageTest {
         storage = new JSONStorage(tempDir.toString());
     }
 
+    /* TODO: abstract object tests */
+
     @Nested
     class SaveTest {
 
@@ -185,6 +187,62 @@ public class JSONStorageTest {
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
             assertJsonFileContents(general, out);
+        }
+
+        @Test
+        @DisplayName("Should keep JSON valid when saving the same object while its state changes")
+        void testSaveConcurrentSameFileWithStateMutation() {
+            final int          writers    = 4;
+            final int          iterations = 30;
+            ExecutorService    executor   = Executors.newFixedThreadPool(writers);
+            CountDownLatch     startGate  = new CountDownLatch(1);
+            List<Future<Void>> futures    = new ArrayList<>();
+            ConcurrentLinkedQueue<JsonNode> snapshots = new ConcurrentLinkedQueue<>();
+
+            General original = generalFactory.createGeneral(
+                GENERAL_NAME, 321, storage
+            );
+            populateGeneralArmy(original);
+            assertDoesNotThrow(() -> storage.save(original));
+
+            for (int w = 0; w < writers; w++) {
+                final int writerId = w;
+                futures.add(executor.submit(() -> {
+                    startGate.await();
+                    for (int it = 0; it < iterations; it++) {
+                        Army army = original.getArmy();
+                        int seed = writerId * 1000 + it;
+                        army.add(
+                            soldierFactory.createSoldier(
+                                Rank.fromValue((seed % 4) + 1),
+                                seed
+                            )
+                        );
+
+                        JsonNode snapshot = mapper.valueToTree(original);
+                        snapshots.add(snapshot);
+
+                        storage.save(original);
+                    }
+                    return null;
+                }));
+            }
+
+            startGate.countDown();
+            for (Future<Void> f : futures) {
+                assertDoesNotThrow(() -> f.get());
+            }
+            executor.shutdown();
+            assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
+
+            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            assertTrue(out.exists());
+            assertTrue(out.length() > 0);
+
+            JsonNode finalOnDisk = assertDoesNotThrow(() -> mapper.readTree(out));
+            boolean matchesAnySnapshot = snapshots.stream()
+                .anyMatch(finalOnDisk::equals);
+            assertTrue(matchesAnySnapshot);
         }
 
     }
@@ -368,7 +426,7 @@ public class JSONStorageTest {
 
         @Test
         @DisplayName("Should allow concurrent save and load on the same file without corruption")
-        void testConcurrentSaveAndLoadSameFile() {
+        void testSaveAndLoadConcurrentSameFile() {
             final int writers    = 3;
             final int readers    = 7;
             final int iterations = 25;
@@ -423,7 +481,7 @@ public class JSONStorageTest {
 
         @Test
         @DisplayName("Should handle mixed save and load tasks for different files in parallel")
-        void testConcurrentSaveAndLoadDifferentFilesMixed() {
+        void testSaveAndLoadConcurrentDifferentFilesMixed() {
             final int          tasks    = 10;
             ExecutorService    executor = Executors.newFixedThreadPool(tasks);
             CountDownLatch     start    = new CountDownLatch(1);
@@ -477,6 +535,85 @@ public class JSONStorageTest {
                     assertTrue(out.length() > 0);
                     assertJsonFileContents(original, out);
                 });
+        }
+
+        @Test
+        @DisplayName("Should allow concurrent save (with mutations) and load of the same file without corruption")
+        void testSaveAndLoadConcurrentSameFileWithStateMutation() throws Exception {
+            final int          writers    = 3;
+            final int          readers    = 5;
+            final int          iterations = 25;
+            ExecutorService    executor   = Executors.newFixedThreadPool(writers + readers);
+            CountDownLatch     startGate  = new CountDownLatch(1);
+            List<Future<Void>> futures    = new ArrayList<>();
+
+            General original = generalFactory.createGeneral(
+                GENERAL_NAME, 777, storage
+            );
+            populateGeneralArmy(original);
+            storage.save(original);
+
+            ConcurrentLinkedQueue<JsonNode> snapshots = new ConcurrentLinkedQueue<>();
+            snapshots.add(mapper.valueToTree(original));
+
+            for (int w = 0; w < writers; w++) {
+                final int writerId = w;
+
+                futures.add(executor.submit(() -> {
+                    startGate.await();
+
+                    for (int it = 0; it < iterations; it++) {
+                        synchronized (original) {
+                            int seed = writerId * 10_000 + it;
+
+                            original.getArmy().add(
+                                soldierFactory.createSoldier(
+                                    Rank.fromValue((seed % 4) + 1),
+                                    seed
+                                )
+                            );
+
+                            snapshots.add(mapper.valueToTree(original));
+
+                            storage.save(original);
+                        }
+                    }
+                    return null;
+                }));
+            }
+
+            for (int r = 0; r < readers; r++) {
+                futures.add(executor.submit(() -> {
+                    General loaded = generalFactory.createGeneral(
+                        GENERAL_NAME, 0, storage
+                    );
+                    startGate.await();
+                    for (int it = 0; it < iterations; it++) {
+                        storage.load(loaded);
+                        JsonNode loadedNode = mapper.valueToTree(loaded);
+
+                        boolean matchesAnySnapshot = snapshots.stream()
+                            .anyMatch(loadedNode::equals);
+                        assertTrue(matchesAnySnapshot);
+                    }
+                    return null;
+                }));
+            }
+
+            startGate.countDown();
+            for (Future<Void> f : futures) {
+                assertDoesNotThrow(() -> f.get());
+            }
+            executor.shutdown();
+            assertDoesNotThrow(() -> executor.awaitTermination(15, TimeUnit.SECONDS));
+
+            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            assertTrue(out.exists());
+            assertTrue(out.length() > 0);
+            JsonNode finalOnDisk = mapper.readTree(out);
+            boolean matchesAnySnapshot = snapshots.stream()
+                .anyMatch(finalOnDisk::equals);
+            assertTrue(matchesAnySnapshot);
         }
 
     }
