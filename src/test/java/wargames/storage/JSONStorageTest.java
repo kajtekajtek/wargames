@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.IntStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,8 +45,6 @@ public class JSONStorageTest {
     void setUp() {
         storage = new JSONStorage(tempDir.toString());
     }
-
-    /* TODO: abstract object tests */
 
     @Nested
     class SaveTest {
@@ -120,7 +119,7 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should handle concurrent saves of different files without errors and create all files")
         void testSaveConcurrentDifferentFiles() {
-            int threads = 10;
+            final int          threads  = 10;
             ExecutorService    executor = Executors.newFixedThreadPool(threads);
             List<Future<Void>> futures  = new ArrayList<>();
             List<General>      generals = new ArrayList<>();
@@ -158,14 +157,14 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should handle concurrent saves of the same file without error and produce a valid JSON")
         void testSaveConcurrentSameFile() {
+            final int          threads  = 10;
+            ExecutorService    executor = Executors.newFixedThreadPool(threads);
+            List<Future<Void>> futures  = new ArrayList<>();
+
             General general = generalFactory.createGeneral(
                 GENERAL_NAME, 150, storage
             );
             populateGeneralArmy(general);
-            File outFile = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
-            int  threads = 5;
-            ExecutorService    executor = Executors.newFixedThreadPool(threads);
-            List<Future<Void>> futures  = new ArrayList<>();
 
             for (int i = 0; i < threads; i++) {
                 futures.add(executor.submit(() -> {
@@ -182,10 +181,10 @@ public class JSONStorageTest {
                 executor.awaitTermination(5, TimeUnit.SECONDS);
             });
 
-            assertTrue(outFile.exists());
-            assertTrue(outFile.length() > 0);
-
-            assertJsonFileContents(general, outFile);
+            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            assertTrue(out.exists());
+            assertTrue(out.length() > 0);
+            assertJsonFileContents(general, out);
         }
 
     }
@@ -259,16 +258,17 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should handle concurrent loads of the same file into separate objects")
         void testLoadConcurrentSameFile() {
+            final int             threads    = 10;
+            List<Future<General>> futures    = new ArrayList<>();
+            ExecutorService       executor   = Executors.newFixedThreadPool(threads);
+            CountDownLatch        start      = new CountDownLatch(1);
+            List<General>         loadedList = new ArrayList<>();
+            
             General original = generalFactory.createGeneral(
                 GENERAL_NAME, 123, storage
-            ); 
+            );
             populateGeneralArmy(original);
             assertDoesNotThrow(() -> storage.save(original));
-
-            final int threads = 10;
-            ExecutorService executor = Executors.newFixedThreadPool(threads);
-            CountDownLatch  start    = new CountDownLatch(1);
-            List<Future<General>> futures = new ArrayList<>();
 
             for (int i = 0; i < threads; i++) {
                 futures.add(executor.submit(() -> {
@@ -285,8 +285,7 @@ public class JSONStorageTest {
 
             for (Future<General> f : futures) {
                 assertDoesNotThrow(() -> {
-                    General loaded = f.get();
-                    assertEqualGenerals(original, loaded);
+                    loadedList.add(f.get());
                 });
             }
             executor.shutdown();
@@ -296,24 +295,29 @@ public class JSONStorageTest {
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
             assertJsonFileContents(original, out);
+
+            for (General g : loadedList) { assertEqualGenerals(original, g); }
         }
 
         @Test
         @DisplayName("Should handle concurrent loads of different files")
         void testLoadConcurrentDifferentFiles() throws Exception {
-            final int files = 8;
-            List<General> originals = new ArrayList<>();
+            final int          files    = 10;
+            List<Future<Void>> futures  = new ArrayList<>();
+            ExecutorService    executor = Executors.newFixedThreadPool(files);
+
+            ConcurrentHashMap<Integer, General> originalsMap, loadedMap;
+            loadedMap    = new ConcurrentHashMap<Integer, General>(files);
+            originalsMap = new ConcurrentHashMap<Integer, General>(files);
+
             for (int i = 0; i < files; i++) {
                 General g = generalFactory.createGeneral(
                     GENERAL_NAME + i, 200 + i, storage
                 );
                 populateGeneralArmy(g);
                 storage.save(g);
-                originals.add(g);
+                originalsMap.put(i, g);
             }
-
-            ExecutorService    executor = Executors.newFixedThreadPool(files);
-            List<Future<Void>> futures  = new ArrayList<>();
 
             for (int i = 0; i < files; i++) {
                 final int idx = i;
@@ -322,7 +326,7 @@ public class JSONStorageTest {
                         GENERAL_NAME + idx, 0, storage
                     );
                     storage.load(loaded);
-                    assertEqualGenerals(originals.get(idx), loaded);
+                    loadedMap.put(idx, loaded);
                     return null;
                 }));
             }
@@ -332,6 +336,12 @@ public class JSONStorageTest {
             }
             executor.shutdown();
             assertDoesNotThrow(() -> executor.awaitTermination(5, TimeUnit.SECONDS));
+
+            IntStream
+                .range(0, files)
+                .forEach((i) -> assertEqualGenerals(
+                    originalsMap.get(i), loadedMap.get(i)
+                ));
         }
 
     }
@@ -354,6 +364,119 @@ public class JSONStorageTest {
             assertDoesNotThrow(() -> storage.load(loaded));
 
             assertEqualGenerals(original, loaded);
+        }
+
+        @Test
+        @DisplayName("Should allow concurrent save and load on the same file without corruption")
+        void testConcurrentSaveAndLoadSameFile() {
+            final int writers    = 3;
+            final int readers    = 7;
+            final int iterations = 25;
+            ExecutorService    executor = Executors.newFixedThreadPool(writers + readers);
+            CountDownLatch     start    = new CountDownLatch(1);
+            List<Future<Void>> futures  = new ArrayList<>();
+            List<General> loadedList = new ArrayList<>();
+            
+            General original = generalFactory.createGeneral(
+                GENERAL_NAME, 777, storage
+            );
+            populateGeneralArmy(original);
+            assertDoesNotThrow(() -> storage.save(original));
+
+            for (int i = 0; i < writers; i++) {
+                futures.add(executor.submit(() -> {
+                    start.await();
+                    for (int it = 0; it < iterations; it++) {
+                        storage.save(original);
+                    }
+                    return null;
+                }));
+            }
+
+            for (int i = 0; i < readers; i++) {
+                futures.add(executor.submit(() -> {
+                    General target = generalFactory.createGeneral(GENERAL_NAME, 0, storage);
+                    start.await();
+                    for (int it = 0; it < iterations; it++) {
+                        storage.load(target);
+                        loadedList.add(target);
+                    }
+                    return null;
+                }));
+            }
+
+            start.countDown();
+            for (Future<Void> f : futures) {
+                assertDoesNotThrow(() -> f.get());
+            }
+            executor.shutdown();
+            assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
+
+            loadedList
+                .forEach(g -> assertEqualGenerals(original, g));
+
+            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            assertTrue(out.exists());
+            assertTrue(out.length() > 0);
+            assertJsonFileContents(original, out);
+        }
+
+        @Test
+        @DisplayName("Should handle mixed save and load tasks for different files in parallel")
+        void testConcurrentSaveAndLoadDifferentFilesMixed() {
+            final int          tasks    = 10;
+            ExecutorService    executor = Executors.newFixedThreadPool(tasks);
+            CountDownLatch     start    = new CountDownLatch(1);
+            List<Future<Void>> futures  = new ArrayList<>();
+            ConcurrentHashMap<Integer, General> originalsMap, loadedMap;
+            ConcurrentHashMap<Integer, File>    outMap;
+            originalsMap = new ConcurrentHashMap<Integer, General>();
+            loadedMap    = new ConcurrentHashMap<Integer, General>();
+            outMap       = new ConcurrentHashMap<Integer, File>();
+
+            for (int i = 0; i < tasks; i++) {
+                final int idx = i;
+                futures.add(executor.submit(() -> {
+                    String  name     = GENERAL_NAME + idx;
+                    General original = generalFactory.createGeneral(
+                        name, 300 + idx, storage
+                    );
+                    populateGeneralArmy(original);
+
+                    start.await();
+                    storage.save(original); originalsMap.put(idx, original);
+
+                    General loaded = generalFactory.createGeneral(
+                        name, 0, storage
+                    );
+
+                    storage.load(loaded); loadedMap.put(idx, loaded);
+
+                    outMap.put(idx, getGeneralFileFromDirectory(name, tempDir));
+
+                    return null;
+                }));
+            }
+
+            start.countDown();
+            for (Future<Void> f : futures) {
+                assertDoesNotThrow(() -> f.get());
+            }
+            executor.shutdown();
+            assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
+
+            IntStream
+                .range(0, tasks)
+                .forEach(i -> {
+                    General original = originalsMap.get(i);
+                    General loaded   = loadedMap.get(i);
+                    File    out      = outMap.get(i);
+                    
+                    assertEqualGenerals(original, loaded);
+                    assertTrue(out.exists());
+                    assertTrue(out.length() > 0);
+                    assertJsonFileContents(original, out);
+                });
         }
 
     }
