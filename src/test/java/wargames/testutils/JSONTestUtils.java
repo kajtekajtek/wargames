@@ -2,13 +2,27 @@ package wargames.testutils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
+import java.io.IOException;
+
 import wargames.models.*;
+import wargames.storage.Mapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class JSONTestUtils {
 
     private JSONTestUtils() { }
+
+    public static <T> T readJson(File f, Class<T> type) {
+        try { 
+            ObjectMapper mapper = Mapper.getInstance();
+            return mapper.readValue(f, type); 
+        } catch (IOException e) { 
+            fail(e); return null; 
+        }
+    }    
 
     public static void assertJsonNodeContents(General g, JsonNode jn) {
         assertNotNull(jn, "General JSON node shouldn't be null");
