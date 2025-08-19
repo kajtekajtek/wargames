@@ -17,11 +17,13 @@ public class TestPojo {
     }
 
     public TestPojo withTags(String... arr) { 
-        this.tags = new ArrayList<>(Arrays.asList(arr)); return this;
+        this.tags = new ArrayList<>(Arrays.asList(arr)); 
+        return this;
     }
 
     public TestPojo withCounter(String k, int v) {
-        this.counters.put(k, v); return this;
+        this.counters.put(k, v); 
+        return this;
     }
 
     public String       getId()    { return id; }
@@ -41,10 +43,10 @@ public class TestPojo {
         if (!(o instanceof TestPojo)) return false;
         TestPojo t = (TestPojo) o;
         return score == t.score &&
-                Objects.equals(id, t.id) &&
-                Objects.equals(name, t.name) &&
-                Objects.equals(tags, t.tags) &&
-                Objects.equals(counters, t.counters);
+               Objects.equals(id, t.id) &&
+               Objects.equals(name, t.name) &&
+               Objects.equals(tags, t.tags) &&
+               Objects.equals(counters, t.counters);
     }
 
     @Override 
