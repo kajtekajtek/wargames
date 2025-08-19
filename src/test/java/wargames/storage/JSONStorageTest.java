@@ -59,7 +59,7 @@ public class JSONStorageTest {
             );
             populateGeneralArmy(generalToSave);
 
-            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File out = getFileFromDirectory(tempDir, GENERAL_NAME);
 
             storage.save(generalToSave);
 
@@ -149,7 +149,7 @@ public class JSONStorageTest {
             });
 
             for (int i = 0; i < threads; i++) {
-                File f = getGeneralFileFromDirectory(GENERAL_NAME + i, tempDir);
+                File f = getFileFromDirectory(tempDir, GENERAL_NAME + i);
                 assertTrue(f.exists());
                 assertTrue(f.length() > 0);
                 assertJsonFileContents(generals.get(i), f);
@@ -183,7 +183,7 @@ public class JSONStorageTest {
                 executor.awaitTermination(5, TimeUnit.SECONDS);
             });
 
-            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File out = getFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
             assertJsonFileContents(general, out);
@@ -235,7 +235,7 @@ public class JSONStorageTest {
             executor.shutdown();
             assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
 
-            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File out = getFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
 
@@ -258,7 +258,7 @@ public class JSONStorageTest {
             );
             populateGeneralArmy(generalToLoad);  
 
-            File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File in = getFileFromDirectory(tempDir, GENERAL_NAME);
 
             mapper.writeValue(in, generalToLoad);
 
@@ -277,7 +277,7 @@ public class JSONStorageTest {
                 GENERAL_NAME, 10, storage
             );
 
-            getGeneralFileFromDirectory(GENERAL_NAME, tempDir).delete();
+            getFileFromDirectory(tempDir, GENERAL_NAME).delete();
 
             LoadJSONStorageException ex = assertThrows(
                 LoadJSONStorageException.class,
@@ -294,7 +294,7 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should throw LoadJSONStorageException when trying to load malformed JSON")
         void testLoadMalformedJson() throws Exception {
-            File in = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File in = getFileFromDirectory(tempDir, GENERAL_NAME);
 
             Files.writeString(in.toPath(), "{ invalid_json ");
             General general = generalFactory.createGeneral(
@@ -349,7 +349,7 @@ public class JSONStorageTest {
             executor.shutdown();
             assertDoesNotThrow(() -> executor.awaitTermination(5, TimeUnit.SECONDS));
 
-            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File out = getFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
             assertJsonFileContents(original, out);
@@ -473,7 +473,7 @@ public class JSONStorageTest {
             loadedList
                 .forEach(g -> assertEqualGenerals(original, g));
 
-            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File out = getFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
             assertJsonFileContents(original, out);
@@ -510,7 +510,7 @@ public class JSONStorageTest {
 
                     storage.load(loaded); loadedMap.put(idx, loaded);
 
-                    outMap.put(idx, getGeneralFileFromDirectory(name, tempDir));
+                    outMap.put(idx, getFileFromDirectory(tempDir, name));
 
                     return null;
                 }));
@@ -607,7 +607,7 @@ public class JSONStorageTest {
             executor.shutdown();
             assertDoesNotThrow(() -> executor.awaitTermination(15, TimeUnit.SECONDS));
 
-            File out = getGeneralFileFromDirectory(GENERAL_NAME, tempDir);
+            File out = getFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
             JsonNode finalOnDisk = mapper.readTree(out);
@@ -627,8 +627,8 @@ public class JSONStorageTest {
         }
     }
 
-    private File getGeneralFileFromDirectory(String generalName, Path directoryPath) {
-        Path filePath = directoryPath.resolve(generalName + FILE_EXTENSION);
+    private File getFileFromDirectory(Path directoryPath, String fileName) {
+        Path filePath = directoryPath.resolve(fileName + FILE_EXTENSION);
         return filePath.toFile();
     }
 
