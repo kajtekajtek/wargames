@@ -1,7 +1,5 @@
 package wargames.testutils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import wargames.models.*;
 
 public final class ModelsTestUtils {
