@@ -96,13 +96,13 @@ public class JSONStorageTest {
             assertTrue(readOnlyDir.mkdir());
             assertTrue(readOnlyDir.setWritable(false));
 
-            storage = new JSONStorage(readOnlyDir.toString());
-
-            General general = generalFactory.createGeneral(
-                GENERAL_NAME, 0, storage
-            );
-
             try {
+                storage = new JSONStorage(readOnlyDir.toString());
+
+                General general = generalFactory.createGeneral(
+                    GENERAL_NAME, 0, storage
+                );
+
                 SaveJSONStorageException ex = assertThrows(
                     SaveJSONStorageException.class, 
                     () -> storage.save(general)
@@ -195,7 +195,7 @@ public class JSONStorageTest {
             final int          iterations = 30;
             ExecutorService    executor   = Executors.newFixedThreadPool(writers);
             CountDownLatch     startGate  = new CountDownLatch(1);
-            List<Future<Void>> futures    = new ArrayList<>();
+            List<Future<?>> futures    = new ArrayList<>();
             ConcurrentLinkedQueue<JsonNode> snapshots = new ConcurrentLinkedQueue<>();
 
             General original = generalFactory.createGeneral(
@@ -206,8 +206,10 @@ public class JSONStorageTest {
 
             for (int w = 0; w < writers; w++) {
                 final int writerId = w;
+
                 futures.add(executor.submit(() -> {
                     startGate.await();
+
                     for (int it = 0; it < iterations; it++) {
                         Army army = original.getArmy();
                         int seed = writerId * 1000 + it;
@@ -223,16 +225,18 @@ public class JSONStorageTest {
 
                         storage.save(original);
                     }
+
                     return null;
                 }));
+
             }
 
             startGate.countDown();
-            for (Future<Void> f : futures) {
-                assertDoesNotThrow(() -> f.get());
-            }
+            for (Future<?> f : futures) assertDoesNotThrow(() -> f.get());
             executor.shutdown();
-            assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
+            assertDoesNotThrow(
+                () -> executor.awaitTermination(10, TimeUnit.SECONDS)
+            );
 
             File out = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
