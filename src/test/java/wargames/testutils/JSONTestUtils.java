@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import wargames.models.*;
 import wargames.storage.Mapper;
@@ -13,7 +14,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class JSONTestUtils {
 
+    private final static String FILE_EXTENSION = ".json";
+
     private JSONTestUtils() { }
+
+    public static File getJSONFileFromDirectory(Path directoryPath, String fileName) {
+        return TestUtils.getFileFromDirectory(
+            directoryPath, fileName + FILE_EXTENSION
+        );
+    }
 
     public static <T> T readJson(File f, Class<T> type) {
         try { 
