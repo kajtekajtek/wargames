@@ -9,7 +9,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -46,8 +45,6 @@ public class JSONStorageTest {
         storage = new JSONStorage(tempDir.toString());
     }
 
-    /* TODO: abstract object tests */
-
     @Nested
     class SaveTest {
 
@@ -63,7 +60,8 @@ public class JSONStorageTest {
 
             File out = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
-            assertJsonFileContents(generalToSave, out);
+            General onDisk = readJson(out, General.class);
+            assertEquals(generalToSave, onDisk);
         }
 
         @Test
@@ -151,7 +149,8 @@ public class JSONStorageTest {
                 File f = getJSONFileFromDirectory(tempDir, GENERAL_NAME + i);
                 assertTrue(f.exists());
                 assertTrue(f.length() > 0);
-                assertJsonFileContents(generals.get(i), f);
+                General onDisk = readJson(f, General.class);
+                assertEquals(generals.get(i), onDisk);
             }
         }
 
@@ -185,7 +184,8 @@ public class JSONStorageTest {
             File out = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
-            assertJsonFileContents(general, out);
+            General onDisk = readJson(out, General.class);
+            assertEquals(general, onDisk);
         }
 
         @Test
@@ -266,7 +266,7 @@ public class JSONStorageTest {
             );
             storage.load(generalLoaded);
 
-            assertEqualGenerals(generalToLoad, generalLoaded);
+            assertEquals(generalToLoad, generalLoaded);
         }
 
         @Test
@@ -351,9 +351,10 @@ public class JSONStorageTest {
             File out = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
-            assertJsonFileContents(original, out);
+            General onDisk = readJson(out, General.class);
+            assertEquals(original, onDisk);
 
-            for (General g : loadedList) { assertEqualGenerals(original, g); }
+            for (General g : loadedList) { assertEquals(original, g); }
         }
 
         @Test
@@ -396,7 +397,7 @@ public class JSONStorageTest {
 
             IntStream
                 .range(0, files)
-                .forEach((i) -> assertEqualGenerals(
+                .forEach((i) -> assertEquals(
                     originalsMap.get(i), loadedMap.get(i)
                 ));
         }
@@ -420,7 +421,7 @@ public class JSONStorageTest {
             );
             assertDoesNotThrow(() -> storage.load(loaded));
 
-            assertEqualGenerals(original, loaded);
+            assertEquals(original, loaded);
         }
 
         @Test
@@ -470,12 +471,13 @@ public class JSONStorageTest {
             assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
 
             loadedList
-                .forEach(g -> assertEqualGenerals(original, g));
+                .forEach(g -> assertEquals(original, g));
 
             File out = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
             assertTrue(out.exists());
             assertTrue(out.length() > 0);
-            assertJsonFileContents(original, out);
+            General onDisk = readJson(out, General.class);
+            assertEquals(original, onDisk);
         }
 
         @Test
@@ -529,10 +531,11 @@ public class JSONStorageTest {
                     General loaded   = loadedMap.get(i);
                     File    out      = outMap.get(i);
                     
-                    assertEqualGenerals(original, loaded);
+                    assertEquals(original, loaded);
                     assertTrue(out.exists());
                     assertTrue(out.length() > 0);
-                    assertJsonFileContents(original, out);
+                    General onDisk = readJson(out, General.class);
+                    assertEquals(original, onDisk);
                 });
         }
 
@@ -623,34 +626,6 @@ public class JSONStorageTest {
             army.add(
                 soldierFactory.createSoldier(Rank.fromValue(i), i)
             );
-        }
-    }
-
-    private File getJSONFileFromDirectory(Path directoryPath, String fileName) {
-        return wargames.testutils.TestUtils.getFileFromDirectory(
-            directoryPath, fileName + FILE_EXTENSION
-        );
-    }
-
-    private void assertJsonFileContents(General general, File file) {
-        Army     army     = general.getArmy();
-        JsonNode rootNode = mapper.createObjectNode();
-
-        try {
-            rootNode = mapper.readTree(file);
-        } catch (IOException e) {
-            assertNull(e, "could not read file " + file.getAbsolutePath());
-        }
-
-        assertJsonNodeContents(general, rootNode);
-
-        JsonNode armyNode = rootNode.get("army");
-        assertJsonNodeContents(army, armyNode);
-
-        JsonNode soldiersNode = armyNode.get("soldiers");
-        for (int i = 0; i < army.getSize(); i++) {
-            JsonNode soldierNode = soldiersNode.get(i);
-            assertJsonNodeContents(army.getSoldiers().get(i), soldierNode);
         }
     }
 }
