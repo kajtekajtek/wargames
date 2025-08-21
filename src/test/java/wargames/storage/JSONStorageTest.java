@@ -431,13 +431,13 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should allow concurrent save and load on the same file without corruption")
         void testSaveAndLoadConcurrentSameFile() {
-            final int writers    = 3;
-            final int readers    = 7;
-            final int iterations = 25;
-            ExecutorService    executor = Executors.newFixedThreadPool(writers + readers);
-            CountDownLatch     start    = new CountDownLatch(1);
-            List<Future<Void>> futures  = new ArrayList<>();
-            List<General> loadedList = new ArrayList<>();
+            final int       writers    = 3, 
+                            readers    = 7, 
+                            iterations = 25;
+            ExecutorService executor = Executors.newFixedThreadPool(writers + readers);
+            CountDownLatch  start    = new CountDownLatch(1);
+            List<Future<?>> futures  = new ArrayList<>();
+            List<General>   loadedList = new ArrayList<>();
             
             General original = generalFactory.createGeneral(
                 GENERAL_NAME, 777, storage
@@ -468,7 +468,7 @@ public class JSONStorageTest {
             }
 
             start.countDown();
-            for (Future<Void> f : futures) {
+            for (Future<?> f : futures) {
                 assertDoesNotThrow(() -> f.get());
             }
             executor.shutdown();
@@ -487,15 +487,15 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should handle mixed save and load tasks for different files in parallel")
         void testSaveAndLoadConcurrentDifferentFilesMixed() {
-            final int          tasks    = 10;
-            ExecutorService    executor = Executors.newFixedThreadPool(tasks);
-            CountDownLatch     start    = new CountDownLatch(1);
-            List<Future<Void>> futures  = new ArrayList<>();
-            ConcurrentHashMap<Integer, General> originalsMap, loadedMap;
-            ConcurrentHashMap<Integer, File>    outMap;
-            originalsMap = new ConcurrentHashMap<Integer, General>();
-            loadedMap    = new ConcurrentHashMap<Integer, General>();
-            outMap       = new ConcurrentHashMap<Integer, File>();
+            final int       tasks    = 10;
+            ExecutorService executor = Executors.newFixedThreadPool(tasks);
+            CountDownLatch  start    = new CountDownLatch(1);
+            List<Future<?>> futures  = new ArrayList<>();
+            ConcurrentHashMap<Integer, General> 
+                originalsMap = new ConcurrentHashMap<Integer, General>(),
+                loadedMap    = new ConcurrentHashMap<Integer, General>();
+            ConcurrentHashMap<Integer, File>
+                outMap = new ConcurrentHashMap<Integer, File>();
 
             for (int i = 0; i < tasks; i++) {
                 final int idx = i;
@@ -522,9 +522,7 @@ public class JSONStorageTest {
             }
 
             start.countDown();
-            for (Future<Void> f : futures) {
-                assertDoesNotThrow(() -> f.get());
-            }
+            for (Future<?> f : futures) assertDoesNotThrow(() -> f.get());
             executor.shutdown();
             assertDoesNotThrow(() -> executor.awaitTermination(10, TimeUnit.SECONDS));
 
@@ -536,8 +534,7 @@ public class JSONStorageTest {
                     File    out      = outMap.get(i);
                     
                     assertEquals(original, loaded);
-                    assertTrue(out.exists());
-                    assertTrue(out.length() > 0);
+                    assertTrue(out.exists()); assertTrue(out.length() > 0);
                     General onDisk = readJson(out, General.class);
                     assertEquals(original, onDisk);
                 });
