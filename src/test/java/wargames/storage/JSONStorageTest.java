@@ -256,27 +256,27 @@ public class JSONStorageTest {
         @Test
         @DisplayName("Should correctly load General state from the JSON file")
         void testLoad() throws Exception {
-            General generalToLoad = generalFactory.createGeneral(
+            General expected = generalFactory.createGeneral(
                 GENERAL_NAME, 0, storage
             );
-            populateGeneralArmy(generalToLoad);  
+            populateGeneralArmy(expected);  
 
             File in = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
 
-            mapper.writeValue(in, generalToLoad);
+            mapper.writeValue(in, expected);
 
-            General generalLoaded = generalFactory.createGeneral(
+            General loaded = generalFactory.createGeneral(
                 GENERAL_NAME, 0, storage
             );
-            storage.load(generalLoaded);
+            storage.load(loaded);
 
-            assertEquals(generalToLoad, generalLoaded);
+            assertEquals(expected, loaded);
         }
 
         @Test
         @DisplayName("Should throw LoadJSONStorageException when loading non-existent file")
         void testLoadNonExistentFile() {
-            General general = generalFactory.createGeneral(
+            General toLoad = generalFactory.createGeneral(
                 GENERAL_NAME, 10, storage
             );
 
@@ -284,7 +284,7 @@ public class JSONStorageTest {
 
             LoadJSONStorageException ex = assertThrows(
                 LoadJSONStorageException.class,
-                () -> storage.load(general)
+                () -> storage.load(toLoad)
             );
             String msg = ex.getMessage();
             assertStringContains(msg, 
@@ -353,8 +353,8 @@ public class JSONStorageTest {
             assertDoesNotThrow(() -> executor.awaitTermination(5, TimeUnit.SECONDS));
 
             File out = getJSONFileFromDirectory(tempDir, GENERAL_NAME);
-            assertTrue(out.exists());
-            assertTrue(out.length() > 0);
+            assertTrue(out.exists()); assertTrue(out.length() > 0);
+
             General onDisk = readJson(out, General.class);
             assertEquals(original, onDisk);
 
