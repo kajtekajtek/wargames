@@ -3,26 +3,24 @@ package wargames.events;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
+import wargames.testutils.testmodels.*;
 import wargames.models.General;
 import wargames.commands.Command;
 import wargames.events.publisher.EventDispatcher;
+import wargames.factories.GeneralFactory;
 
 public class CommandEventTest {
 
     @Nested
     class BeforeAndAfterCommandEvent {
 
-        private class TestCommand extends Command {
-
-            public TestCommand(General g, EventDispatcher d) { super(g, d); }
-
-            @Override
-            public void execute() { }
-        }
+        private final GeneralFactory generalFactory = new GeneralFactory();
 
         private final String  generalName = "Helm Hammerhand";
         private final int     generalGold = 64;
-        private final General general     = new General(generalName, generalGold);
+        private final General general     = generalFactory.createGeneral(
+            generalName, generalGold
+        );
 
         private final EventDispatcher dispatcher = EventDispatcher.getInstance();
 

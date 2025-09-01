@@ -5,22 +5,26 @@ import wargames.models.Rank;
 
 public class SoldierFactory {
     public Soldier createSoldier(Rank rank) {
-        return Soldier.withRank(rank);
+        return new Soldier(rank);
+    }
+
+    public Soldier createSoldier(Rank rank, int exp) {
+        return new Soldier(rank, exp);
     }
 
     public Soldier createPrivate() {
-        return Soldier.withRank(Rank.PRIVATE);
+        return new Soldier(Rank.PRIVATE);
     }
     
     public Soldier createCorporal() {
-        return Soldier.withRank(Rank.CORPORAL);
+        return new Soldier(Rank.CORPORAL);
     }
 
     public Soldier createCaptain() {
-        return Soldier.withRank(Rank.CAPTAIN);
+        return new Soldier(Rank.CAPTAIN);
     }
 
     public Soldier createMajor() {
-        return Soldier.withRank(Rank.MAJOR);
+        return new Soldier(Rank.MAJOR);
     }
 }

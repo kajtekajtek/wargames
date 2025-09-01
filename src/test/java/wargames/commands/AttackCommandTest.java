@@ -22,17 +22,19 @@ public class AttackCommandTest {
     private static final int  TEST_ARMY_SIZE     = 10;
     private static final Rank TEST_SOLDIERS_RANK = Rank.PRIVATE;
 
-    private final SoldierFactory  soldierFactory = new SoldierFactory();
-    private final EventDispatcher dispatcher     = EventDispatcher.getInstance();
-    private final CommandFactory  commandFactory = new CommandFactory(dispatcher, soldierFactory);
+    private final EventDispatcher dispatcher = EventDispatcher.getInstance();
+
+    private final SoldierFactory soldierFactory = new SoldierFactory();
+    private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
+    private final GeneralFactory generalFactory = new GeneralFactory();
     
     private General attacking;
     private General attacked;
 
     @BeforeEach
     void setUp() {
-        attacking = new General(ATTACKER_NAME, STARTING_GOLD);
-        attacked  = new General(ATTACKED_NAME, STARTING_GOLD);
+        attacking = generalFactory.createGeneral(ATTACKER_NAME, STARTING_GOLD);
+        attacked  = generalFactory.createGeneral(ATTACKED_NAME, STARTING_GOLD);
         
         setUpTestArmy(attacking);
         setUpTestArmy(attacked);
@@ -85,7 +87,9 @@ public class AttackCommandTest {
     @ValueSource(strings = {"attacker", "attacked", "both"})
     @DisplayName("IllegalArgumentException when {0} has an empty army")
     void testEmptyArmyThrows(String roleWithEmpty) {
-        General withoutArmy = new General("General without an army", STARTING_GOLD);
+        General withoutArmy = generalFactory.createGeneral(
+            "General without an army", STARTING_GOLD
+        );
         switch (roleWithEmpty) {
             case "attacker":
                 attacking = withoutArmy;
@@ -96,8 +100,12 @@ public class AttackCommandTest {
                 break;
 
             case "both":
-                attacking = new General("Attacking without an army", STARTING_GOLD);
-                attacked  = new General("Attacked without an army", STARTING_GOLD);
+                attacking = generalFactory.createGeneral(
+                    "Attacking without an army", STARTING_GOLD
+                );
+                attacked  = generalFactory.createGeneral(
+                    "Attacked without an army", STARTING_GOLD
+                );
                 break;
         }
 
@@ -185,8 +193,12 @@ public class AttackCommandTest {
     @Test
     @DisplayName("Should draw on to armies with 1 soldier")
     void testSingleSoldierDraw() {
-        attacking = new General(ATTACKER_NAME, STARTING_GOLD);
-        attacked  = new General(ATTACKED_NAME, STARTING_GOLD);
+        attacking = generalFactory.createGeneral(
+            ATTACKER_NAME, STARTING_GOLD
+        );
+        attacked  = generalFactory.createGeneral(
+            ATTACKED_NAME, STARTING_GOLD
+        );
         Soldier sa = soldierFactory.createSoldier(TEST_SOLDIERS_RANK);
         Soldier sb = soldierFactory.createSoldier(TEST_SOLDIERS_RANK);
         attacking.getArmy().add(sa);

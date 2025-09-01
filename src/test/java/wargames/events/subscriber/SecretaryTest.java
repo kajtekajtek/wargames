@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.*;
 import java.io.*;
 import java.util.List;
 
+import wargames.testutils.testmodels.*;
 import wargames.commands.*;
 import wargames.models.*;
 import wargames.factories.*;
@@ -20,6 +21,8 @@ public class SecretaryTest {
 
     private static final EventDispatcher dispatcher = EventDispatcher.getInstance();
     private static final ByteArrayOutputStream out  = new ByteArrayOutputStream();
+
+    private final GeneralFactory generalFactory = new GeneralFactory();
 
     @BeforeAll
     static void setUp() {
@@ -39,9 +42,6 @@ public class SecretaryTest {
     @Nested
     @DisplayName("Should log event message to system out on update")
     class UpdateTest {
-
-        /* toy event implementation */
-        private class TestEvent implements Event { }
 
         /* all log messages */
         private final String expectedMessagePrefix = "Secretary: ";
@@ -74,15 +74,6 @@ public class SecretaryTest {
         @DisplayName("Should log command execution messages on CommandEvent update")
         class UpdateCommandEventTest {
 
-            /* toy command implementation */
-            private class TestCommand extends Command {
-
-                public TestCommand(General g, EventDispatcher d) { super(g, d); }
-
-                @Override
-                public void execute() { }
-            }
-
             private final SoldierFactory soldierFactory = new SoldierFactory();
             private final CommandFactory commandFactory = new CommandFactory(dispatcher, soldierFactory);
 
@@ -93,7 +84,7 @@ public class SecretaryTest {
 
             @BeforeEach
             void setUp() {
-                general = new General(generalName, generalGold);
+                general = generalFactory.createGeneral(generalName, generalGold);
             }
 
             @Test
@@ -148,7 +139,9 @@ public class SecretaryTest {
                 attackingArmy.add(soldierFactory.createPrivate());
                 attackingArmy.add(soldierFactory.createPrivate());
 
-                General attackedGeneral = new General("Duke of Wellington", generalGold);
+                General attackedGeneral = generalFactory.createGeneral(
+                    "Duke of Wellington", generalGold
+                );
                 Army    attackedArmy = attackedGeneral.getArmy();
                 for (int i = 0; i < attackedArmySize; i++) {
                     attackedArmy.add(soldierFactory.createPrivate());
